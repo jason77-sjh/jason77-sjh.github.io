@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cyberpunk Breakout</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+  #cw { display: flex; flex-direction: column; align-items: center; gap: 0; padding: 0.5rem 0; background: #000; border-radius: 12px; }
+  #hud {
+    width: 560px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 16px;
+    background: #0a0a0a;
+    border: 1px solid #ff2dce44;
+    border-bottom: none;
+    border-radius: 10px 10px 0 0;
+    font-family: 'Orbitron', monospace;
+  }
+  .hud-block { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .hud-label { font-size: 9px; letter-spacing: 3px; color: #ff2dce99; text-transform: uppercase; }
+  .hud-val { font-size: 18px; font-weight: 700; color: #fff; text-shadow: 0 0 10px #ff2dce, 0 0 20px #ff2dce88; }
+  .hud-val.cyan   { color: #0fffc1; text-shadow: 0 0 10px #0fffc1, 0 0 20px #0fffc188; }
+  .hud-val.purple { color: #bf5fff; text-shadow: 0 0 10px #bf5fff, 0 0 20px #bf5fff88; }
+  #gameCanvas { display: block; border: 1px solid #ff2dce44; border-top: none; border-bottom: none; }
+  #bar {
+    width: 560px;
+    padding: 7px 16px;
+    background: #0a0a0a;
+    border: 1px solid #ff2dce44;
+    border-top: 1px solid #ff2dce22;
+    border-radius: 0 0 10px 10px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  #msg {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px; letter-spacing: 2px;
+    color: #0fffc1cc;
+    text-shadow: 0 0 8px #0fffc1;
+    flex: 1; text-align: center;
+  }
+  #btnStart {
+    font-family: 'Orbitron', monospace;
+    font-size: 10px; letter-spacing: 2px;
+    padding: 6px 16px;
+    background: transparent;
+    color: #ff2dce;
+    border: 1px solid #ff2dce;
+    border-radius: 4px;
+    cursor: pointer;
+    text-shadow: 0 0 8px #ff2dce;
+    box-shadow: 0 0 10px #ff2dce44;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  #btnStart:hover { background: #ff2dce22; box-shadow: 0 0 18px #ff2dce88; }
+</style>
+</head>
+<body>
+<div id="cw">
+  <div id="hud">
+    <div class="hud-block"><div class="hud-label">Score</div><div class="hud-val" id="scoreVal">0</div></div>
+    <div class="hud-block"><div class="hud-label">Level</div><div class="hud-val cyan" id="levelVal">1</div></div>
+    <div class="hud-block"><div class="hud-label">Lives</div><div class="hud-val purple" id="livesVal">♦ ♦ ♦</div></div>
+  </div>
+  <canvas id="gameCanvas" width="560" height="400"></canvas>
+  <div id="bar">
+    <div id="msg">← → MOVE &nbsp;|&nbsp; SPACE / ↑ LAUNCH</div>
+    <button id="btnStart">NEW GAME</button>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+// ─── 상수 ───────────────────────────────────────────────
+const COLS = 10, BRICK_W = 46, BRICK_H = 15, BRICK_PAD = 5, BRICK_TOP = 30;
+const PAD_H = 10, BALL_R = 6;
+const NEON  = ['#ff2dce', '#0fffc1', '#bf5fff', '#ff2dce', '#0fffc1'];
+const GLOW  = ['#ff2dce', '#0fffc1', '#bf5fff', '#ff2dce', '#0fffc1'];
+
+// ─── 상태 ───────────────────────────────────────────────
+let state = 'idle', score = 0, lives = 3, level = 1;
+let bricks = [], pad = {}, ball = {}, launchPending = true;
+let keys = {}, animId, particles = [], winAnim = 0;
+
+// ─── 벽돌 생성 ──────────────────────────────────────────
+function makeBricks(lvl) {
+  bricks = [];
+  const rows = Math.min(4 + Math.floor((lvl - 1) / 2), 8);
+  const totalW = COLS * (BRICK_W + BRICK_PAD) - BRICK_PAD;
+  const startX = (W - totalW) / 2;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const hp = (lvl >= 3 && r < 2) ? 2 : 1;
+      bricks.push({
+        x: startX + c * (BRICK_W + BRICK_PAD),
+        y: BRICK_TOP + r * (BRICK_H + BRICK_PAD),
+        w: BRICK_W, h: BRICK_H,
+        color: NEON[r % NEON.length],
+        glow:  GLOW[r % GLOW.length],
+        hp, maxHp: hp
+      });
+    }
+  }
+}
+
+// ─── 공 리셋 / 발사 ─────────────────────────────────────
+function resetBall() {
+  ball = { x: pad.x + pad.w / 2, y: pad.y - BALL_R - 2, vx: 0, vy: 0, r: BALL_R };
+  launchPending = true;
+}
+
+function launchBall() {
+  if (!launchPending) return;
+  const speed = 3.8 + (level - 1) * 0.35;
+  const angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.5;
+  ball.vx = Math.cos(angle) * speed;
+  ball.vy = Math.sin(angle) * speed;
+  launchPending = false;
+}
+
+// ─── HUD 업데이트 ────────────────────────────────────────
+function livesStr(n) { return '♦ '.repeat(n).trim() || '—'; }
+function updateHUD() {
+  document.getElementById('scoreVal').textContent = score;
+  document.getElementById('levelVal').textContent = level;
+  document.getElementById('livesVal').textContent = livesStr(lives);
+}
+function setMsg(t) { document.getElementById('msg').textContent = t; }
+
+// ─── 게임 초기화 ─────────────────────────────────────────
+function init() {
+  score = 0; lives = 3; level = 1; particles = []; winAnim = 0;
+  pad = { x: W / 2 - 50, y: H - 30, w: 100 };
+  makeBricks(level);
+  resetBall();
+  updateHUD();
+  state = 'playing';
+  setMsg('← → MOVE  |  SPACE / ↑ LAUNCH');
+}
+
+// ─── 파티클 ──────────────────────────────────────────────
+function spawnParticles(x, y, color) {
+  for (let i = 0; i < 12; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 1 + Math.random() * 3;
+    particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life: 1, color });
+  }
+}
+function updateParticles() {
+  particles = particles.filter(p => p.life > 0);
+  for (const p of particles) { p.x += p.vx; p.y += p.vy; p.vy += 0.08; p.life -= 0.035; }
+}
+function drawParticles() {
+  for (const p of particles) {
+    ctx.save();
+    ctx.globalAlpha = p.life;
+    ctx.shadowBlur = 8; ctx.shadowColor = p.color;
+    ctx.fillStyle = p.color;
+    ctx.beginPath(); ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+}
+
+// ─── 그리기 헬퍼 ─────────────────────────────────────────
+function rr(x, y, w, h, r) {
+  ctx.beginPath(); ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y); ctx.arcTo(x + w, y, x + w, y + r, r);
+  ctx.lineTo(x + w, y + h - r); ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+  ctx.lineTo(x + r, y + h); ctx.arcTo(x, y + h, x, y + h - r, r);
+  ctx.lineTo(x, y + r); ctx.arcTo(x, y, x + r, y, r);
+  ctx.closePath();
+}
+
+function neonRect(x, y, w, h, r, color, alpha = 1) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.shadowBlur = 18; ctx.shadowColor = color;
+  ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+  rr(x, y, w, h, r); ctx.stroke();
+  ctx.shadowBlur = 6;
+  const g = ctx.createLinearGradient(x, y, x, y + h);
+  g.addColorStop(0, color + '44'); g.addColorStop(1, color + '11');
+  ctx.fillStyle = g; ctx.fill();
+  ctx.restore();
+}
+
+// ─── 화면 그리기 ─────────────────────────────────────────
+function drawBg() {
+  ctx.fillStyle = '#050508'; ctx.fillRect(0, 0, W, H);
+  // 격자
+  ctx.save();
+  ctx.strokeStyle = '#ff2dce08'; ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+  ctx.restore();
+  // 스캔라인
+  const scanY = (Date.now() / 20) % H;
+  const sg = ctx.createLinearGradient(0, scanY - 10, 0, scanY + 10);
+  sg.addColorStop(0, 'rgba(0,255,193,0)');
+  sg.addColorStop(0.5, 'rgba(0,255,193,0.03)');
+  sg.addColorStop(1, 'rgba(0,255,193,0)');
+  ctx.fillStyle = sg; ctx.fillRect(0, scanY - 10, W, 20);
+}
+
+function drawBricks() {
+  for (const b of bricks) {
+    if (b.hp <= 0) continue;
+    const dim = b.hp < b.maxHp ? 0.5 : 1;
+    neonRect(b.x, b.y, b.w, b.h, 3, b.color, dim);
+    if (b.hp === 2) {
+      ctx.save();
+      ctx.font = 'bold 8px Orbitron, monospace';
+      ctx.fillStyle = b.color;
+      ctx.shadowBlur = 6; ctx.shadowColor = b.color;
+      ctx.textAlign = 'center';
+      ctx.fillText('▣', b.x + b.w / 2, b.y + b.h / 2 + 3);
+      ctx.restore();
+    }
+  }
+}
+
+function drawPad() {
+  ctx.save();
+  ctx.shadowBlur = 24; ctx.shadowColor = '#0fffc1';
+  ctx.strokeStyle = '#0fffc1'; ctx.lineWidth = 2;
+  rr(pad.x, pad.y, pad.w, PAD_H, 5); ctx.stroke();
+  const g = ctx.createLinearGradient(pad.x, pad.y, pad.x, pad.y + PAD_H);
+  g.addColorStop(0, '#0fffc133'); g.addColorStop(1, '#0fffc108');
+  ctx.fillStyle = g; ctx.fill();
+  ctx.shadowBlur = 4; ctx.strokeStyle = '#0fffc166'; ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(pad.x + 8, pad.y + PAD_H / 2);
+  ctx.lineTo(pad.x + pad.w - 8, pad.y + PAD_H / 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawBall() {
+  ctx.save();
+  ctx.shadowBlur = 30; ctx.shadowColor = '#ffffff';
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2); ctx.fill();
+  ctx.shadowBlur = 60; ctx.shadowColor = '#0fffc1';
+  ctx.globalAlpha = 0.4;
+  ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r + 3, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+
+function drawWin() {
+  winAnim += 0.04;
+  const pulse = 0.7 + 0.3 * Math.sin(winAnim * 3);
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,0.75)'; ctx.fillRect(0, 0, W, H);
+  ctx.textAlign = 'center';
+  ctx.font = '900 52px Orbitron, monospace';
+  ctx.shadowBlur = 40 * pulse; ctx.shadowColor = '#0fffc1';
+  ctx.fillStyle = '#0fffc1';
+  ctx.fillText('YOU WIN', W / 2, H / 2 - 30);
+  ctx.font = '700 22px Orbitron, monospace';
+  ctx.shadowColor = '#ff2dce'; ctx.shadowBlur = 20 * pulse; ctx.fillStyle = '#ff2dce';
+  ctx.fillText('SCORE: ' + score, W / 2, H / 2 + 20);
+  ctx.font = '400 12px Orbitron, monospace';
+  ctx.shadowColor = '#bf5fff'; ctx.shadowBlur = 12; ctx.fillStyle = '#bf5fff';
+  ctx.fillText('PRESS NEW GAME TO CONTINUE', W / 2, H / 2 + 58);
+  ctx.restore();
+}
+
+function drawOver() {
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,0.8)'; ctx.fillRect(0, 0, W, H);
+  ctx.textAlign = 'center';
+  ctx.font = '900 42px Orbitron, monospace';
+  ctx.shadowBlur = 30; ctx.shadowColor = '#ff2dce'; ctx.fillStyle = '#ff2dce';
+  ctx.fillText('GAME OVER', W / 2, H / 2 - 20);
+  ctx.font = '700 18px Orbitron, monospace';
+  ctx.shadowColor = '#bf5fff'; ctx.fillStyle = '#bf5fff';
+  ctx.fillText('SCORE: ' + score, W / 2, H / 2 + 20);
+  ctx.font = '400 11px Orbitron, monospace';
+  ctx.shadowColor = '#0fffc1'; ctx.shadowBlur = 10; ctx.fillStyle = '#0fffc1';
+  ctx.fillText('PRESS NEW GAME', W / 2, H / 2 + 52);
+  ctx.restore();
+}
+
+// ─── 업데이트 (게임 로직) ────────────────────────────────
+const PAD_SPEED = 6;
+function update() {
+  if (state === 'win' || state === 'over') return;
+  if (state !== 'playing') return;
+
+  // 막대 이동
+  if (keys['ArrowLeft'])  pad.x = Math.max(0, pad.x - PAD_SPEED);
+  if (keys['ArrowRight']) pad.x = Math.min(W - pad.w, pad.x + PAD_SPEED);
+
+  // 대기 중이면 공이 막대 위에 붙어있음
+  if (launchPending) {
+    ball.x = pad.x + pad.w / 2;
+    ball.y = pad.y - ball.r - 2;
+    if (keys[' '] || keys['ArrowUp']) launchBall();
+    return;
+  }
+
+  // 공 이동
+  ball.x += ball.vx;
+  ball.y += ball.vy;
+
+  // 벽 반사
+  if (ball.x - ball.r < 0) { ball.x = ball.r; ball.vx = Math.abs(ball.vx); }
+  if (ball.x + ball.r > W) { ball.x = W - ball.r; ball.vx = -Math.abs(ball.vx); }
+  if (ball.y - ball.r < 0) { ball.y = ball.r; ball.vy = Math.abs(ball.vy); }
+
+  // 바닥 → 목숨 감소
+  if (ball.y + ball.r > H) {
+    lives--; updateHUD();
+    if (lives <= 0) { state = 'over'; setMsg('GAME OVER'); }
+    else { resetBall(); setMsg('LOST!  SPACE / ↑ TO RELAUNCH'); }
+    return;
+  }
+
+  // 막대 충돌
+  if (ball.vy > 0 &&
+      ball.x > pad.x && ball.x < pad.x + pad.w &&
+      ball.y + ball.r > pad.y && ball.y + ball.r < pad.y + PAD_H + 8) {
+    const hit = (ball.x - (pad.x + pad.w / 2)) / (pad.w / 2);
+    const angle = hit * (Math.PI / 3);
+    const speed = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
+    ball.vx = Math.sin(angle) * speed;
+    ball.vy = -Math.abs(Math.cos(angle) * speed);
+    ball.y = pad.y - ball.r - 1;
+  }
+
+  // 벽돌 충돌
+  for (const b of bricks) {
+    if (b.hp <= 0) continue;
+    if (ball.x + ball.r > b.x && ball.x - ball.r < b.x + b.w &&
+        ball.y + ball.r > b.y && ball.y - ball.r < b.y + b.h) {
+      const oL = (ball.x + ball.r) - b.x, oR = (b.x + b.w) - (ball.x - ball.r);
+      const oT = (ball.y + ball.r) - b.y, oB = (b.y + b.h) - (ball.y - ball.r);
+      if (Math.min(oL, oR) < Math.min(oT, oB)) ball.vx = -ball.vx; else ball.vy = -ball.vy;
+      b.hp--;
+      score += 10; updateHUD();
+      spawnParticles(b.x + b.w / 2, b.y + b.h / 2, b.color);
+      break;
+    }
+  }
+
+  updateParticles();
+
+  // 모든 벽돌 제거 → 다음 레벨 / YOU WIN
+  if (bricks.every(b => b.hp <= 0)) {
+    if (state === 'playing') {
+      level++;
+      makeBricks(level); updateHUD();
+      if (level > 5) { state = 'win'; setMsg('YOU WIN!'); }
+      else { resetBall(); setMsg(`LEVEL ${level} — SPACE / ↑ LAUNCH`); }
+    }
+  }
+}
+
+// ─── 메인 루프 ───────────────────────────────────────────
+function draw() {
+  drawBg(); drawBricks(); drawParticles(); drawPad(); drawBall();
+  if (launchPending && state === 'playing') {
+    ctx.save();
+    ctx.font = '400 10px Orbitron, monospace'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#0fffc166'; ctx.shadowBlur = 8; ctx.shadowColor = '#0fffc1';
+    ctx.fillText('SPACE / ↑  TO  LAUNCH', W / 2, pad.y - 18);
+    ctx.restore();
+  }
+  if (state === 'win') drawWin();
+  if (state === 'over') drawOver();
+}
+
+function loop() { update(); draw(); animId = requestAnimationFrame(loop); }
+
+// ─── 이벤트 ──────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  keys[e.key] = true;
+  if (['ArrowLeft', 'ArrowRight', 'ArrowUp', ' '].includes(e.key)) e.preventDefault();
+});
+document.addEventListener('keyup', e => { keys[e.key] = false; });
+
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  pad.x = Math.min(W - pad.w, Math.max(0, e.clientX - rect.left - pad.w / 2));
+});
+canvas.addEventListener('click', () => { if (launchPending && state === 'playing') launchBall(); });
+
+let tx = 0, px = 0;
+canvas.addEventListener('touchstart', e => { e.preventDefault(); tx = e.touches[0].clientX; px = pad.x; }, { passive: false });
+canvas.addEventListener('touchmove',  e => { e.preventDefault(); pad.x = Math.min(W - pad.w, Math.max(0, px + (e.touches[0].clientX - tx))); }, { passive: false });
+canvas.addEventListener('touchend',   e => { e.preventDefault(); if (launchPending && state === 'playing') launchBall(); }, { passive: false });
+
+document.getElementById('btnStart').addEventListener('click', () => {
+  if (animId) cancelAnimationFrame(animId);
+  init(); loop();
+});
+
+init(); loop();
+</script>
+</body>
+</html>
