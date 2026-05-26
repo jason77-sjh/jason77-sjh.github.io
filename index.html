@@ -3,18 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sung Jung-hoon </title>
-    
+    <title>Sung Jung-hoon</title>
     <link rel="icon" href="image/favicon.ico" type="image/x-icon">
     <style>
-        /* 기본 스타일 및 폰트 설정 */
         body {
             font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
             line-height: 1.6;
             color: #333;
             max-width: 900px;
             margin: 0 auto;
-            padding: 40px 20px;
+            padding: 28px 20px 40px;
             background-color: #fcfcfc;
         }
 
@@ -22,7 +20,38 @@
             color: #1a1a1a;
         }
 
-        /* 상단 프로필 영역 (사진 우측 배치) */
+        .top-nav {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+        }
+
+        .top-nav a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 38px;
+            padding: 0 14px;
+            border: 1px solid #d7e3f3;
+            border-radius: 6px;
+            color: #0056b3;
+            background-color: #fff;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.95rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+            transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+        }
+
+        .top-nav a:hover {
+            background-color: #0056b3;
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
         .profile-header {
             display: flex;
             justify-content: space-between;
@@ -48,6 +77,15 @@
             color: #555;
         }
 
+        .profile-info a {
+            color: #0056b3;
+            text-decoration: none;
+        }
+
+        .profile-info a:hover {
+            text-decoration: underline;
+        }
+
         .profile-image-container {
             width: 180px;
             height: 180px;
@@ -65,7 +103,6 @@
             object-fit: cover;
         }
 
-        /* 섹션 공통 스타일 */
         section {
             margin-bottom: 50px;
         }
@@ -96,7 +133,6 @@
             left: 0;
         }
 
-        /* 프로젝트 그리드 스타일 */
         .project-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -129,19 +165,48 @@
             margin-bottom: 0;
         }
 
-        /* 모바일 반응형 처리 */
+        .primary-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #0056b3;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        .primary-link:hover {
+            background-color: #003f82;
+        }
+
         @media (max-width: 600px) {
+            body {
+                padding-top: 20px;
+            }
+
+            .top-nav {
+                justify-content: center;
+            }
+
+            .top-nav a {
+                flex: 1 1 42%;
+            }
+
             .profile-header {
                 flex-direction: column-reverse;
                 text-align: center;
             }
+
             .profile-info {
                 padding-right: 0;
                 margin-top: 20px;
             }
+
             ul li::before {
                 left: 5px;
             }
+
             ul li {
                 padding-left: 25px;
                 text-align: left;
@@ -151,12 +216,19 @@
 </head>
 <body>
 
+    <nav class="top-nav" aria-label="Main navigation">
+        <a href="publication.html">Publication</a>
+        <a href="cv.html">CV</a>
+        <a href="patent.html">Patent</a>
+        <a href="game.html">Game</a>
+    </nav>
+
     <header class="profile-header">
         <div class="profile-info">
             <h1>Jung Hoon Sung</h1>
             <p><strong>단국대학교 컴퓨터공학</strong></p>
             <p>수어 번역(SLT) 및 모션 생성 등 딥러닝 기술을 활용한 컴퓨터 인터랙션 시스템을 연구하고 있습니다.</p>
-            <p><a href="mailto:your-email@example.com" style="color: #0056b3; text-decoration: none;">이메일 주소를 여기에 입력하세요</a></p>
+            <p><a href="mailto:jason_dku77@dankook.ac.kr">jason_dku77@dankook.ac.kr</a></p>
         </div>
         <div class="profile-image-container">
             <img src="birming.png" alt="성정훈 프로필 사진">
@@ -188,19 +260,17 @@
                 <h3>Context-aware Gloss-wise Autoregressive Diffusion</h3>
                 <p>연속적인 수어 모션 생성을 위한 확산 모델 기반 방법론 연구 및 개발.</p>
             </div>
-            
             <div class="project-card">
                 <h3>WristHOI Dataset</h3>
                 <p>Dual Wrist-mounted 형태의 접촉 인지 Hand-Object Interaction 데이터셋 구축 및 분석.</p>
             </div>
-
             <div class="project-card">
                 <h3>새로운 프로젝트 이름</h3>
                 <p>여기에 진행했던 프로젝트의 간략한 설명, 사용한 기술 스택(PyTorch, Blender 등), 주요 성과를 적어주세요.</p>
             </div>
         </div>
     </section>
-    
+
     <section id="games">
         <h2>Games</h2>
         <div class="project-grid">
@@ -208,12 +278,10 @@
                 <h3>나의 첫 HTML 게임</h3>
                 <p>웹 브라우저에서 바로 즐길 수 있도록 직접 구현한 게임입니다. 아래 버튼을 눌러 바로 플레이해 보세요!</p>
                 <br>
-                <a href="game.html" target="_blank" style="display: inline-block; padding: 10px 20px; background-color: #0056b3; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; transition: background-color 0.2s;">
-                    게임 플레이 하기 🎮
-                </a>
+                <a class="primary-link" href="game.html" target="_blank">게임 플레이 하기 🎮</a>
             </div>
         </div>
     </section>
-    
+
 </body>
 </html>
