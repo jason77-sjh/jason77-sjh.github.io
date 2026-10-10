@@ -3,1073 +3,611 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>연금술사의 비밀 연구실 - 방탈출 게임</title>
-    <!-- Tailwind CSS CDN -->
+    <title>모던 지뢰찾기 (Minesweeper)</title>
+    <!-- Tailwind CSS 로드 -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
+    <!-- 구글 폰트 Inter 적용 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Gowun Batang', serif;
-            background-color: #0d0a08;
-            color: #e2d1b0;
-            user-select: none;
-            overflow-x: hidden;
+            font-family: 'Inter', sans-serif;
+            touch-action: manipulation;
         }
-
-        .cinzel-font {
-            font-family: 'Cinzel', serif;
+        .cell-pop {
+            animation: pop 0.15s ease-in-out;
         }
-
-        /* Candle Flickering & Visual Effects */
-        .ambient-glow {
-            box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.9), 0 0 40px rgba(180, 83, 9, 0.15);
+        @keyframes pop {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
         }
-
-        .candle-flicker {
-            animation: flicker 3s infinite alternate;
-        }
-
-        @keyframes flicker {
-            0%, 100% { opacity: 0.85; filter: drop-shadow(0 0 15px rgba(245, 158, 11, 0.4)); }
-            25% { opacity: 1; filter: drop-shadow(0 0 25px rgba(245, 158, 11, 0.6)); }
-            50% { opacity: 0.9; filter: drop-shadow(0 0 18px rgba(217, 119, 6, 0.5)); }
-            75% { opacity: 0.95; filter: drop-shadow(0 0 22px rgba(245, 158, 11, 0.55)); }
-        }
-
-        /* Interactive Hotspot Glow */
-        .hotspot {
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .hotspot:hover {
-            filter: drop-shadow(0 0 12px rgba(234, 179, 8, 0.8));
-            transform: scale(1.015);
-        }
-
-        /* UV Light Effect Overlay */
-        .uv-active {
-            box-shadow: 0 0 25px #a855f7, inset 0 0 15px #a855f7;
-            border-color: #c084fc !important;
-        }
-
-        .uv-glowing-text {
-            color: #d8b4fe;
-            text-shadow: 0 0 8px #a855f7, 0 0 15px #8b5cf6, 0 0 25px #6d28d9;
-            font-family: 'Cinzel', serif;
-            letter-spacing: 0.25em;
-        }
-
-        /* Parchment Background Texture */
-        .parchment {
-            background: linear-gradient(135deg, #2a2015 0%, #1c140d 100%);
-            border: 2px solid #854d0e;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-        }
-
-        /* Scrollbar styling */
-        ::-webkit-scrollbar {
+        /* 드래그 영역 커스텀 스크롤바 감추기 또는 깔끔하게 유지 */
+        .custom-scrollbar::-webkit-scrollbar {
             width: 6px;
+            height: 6px;
         }
-        ::-webkit-scrollbar-track {
-            background: #110d0a;
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #020617;
         }
-        ::-webkit-scrollbar-thumb {
-            background: #78350f;
-            border-radius: 3px;
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 9999px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #475569;
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between items-center relative select-none">
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col items-center justify-between p-2 sm:p-4 select-none">
 
-    <!-- Header / HUD -->
-    <header class="w-full max-w-5xl px-4 py-3 bg-stone-950/90 border-b border-amber-900/60 flex flex-wrap justify-between items-center z-20 shadow-lg">
-        <div class="flex items-center space-x-3">
-            <span class="text-2xl">🧪</span>
-            <h1 class="text-xl md:text-2xl font-bold text-amber-400 cinzel-font tracking-wide">연금술사의 비밀 연구실</h1>
-        </div>
-
-        <div class="flex items-center space-x-4 my-1 md:my-0">
-            <!-- Timer Display -->
-            <div class="flex items-center bg-stone-900 border border-amber-800/80 px-3 py-1.5 rounded-lg shadow-inner">
-                <span class="text-amber-500 mr-2 text-sm font-semibold">남은 시간:</span>
-                <span id="timer-display" class="font-mono text-xl font-bold text-red-400 tracking-wider">20:00</span>
+    <div class="w-full max-w-5xl bg-slate-800 rounded-2xl shadow-2xl p-4 sm:p-6 border border-slate-700 flex flex-col h-[94vh]">
+        
+        <!-- 게임 헤더 영역 -->
+        <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-3 shrink-0">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500">
+                    💣 지뢰찾기
+                </h1>
+                <p class="text-xs text-slate-400 mt-1">드래그(패닝) 및 줌 버튼으로 넓은 판을 탐색하세요!</p>
             </div>
 
-            <!-- Controls -->
-            <button id="btn-hint" onclick="openHintModal()" class="px-3 py-1.5 bg-amber-950 hover:bg-amber-900 border border-amber-700 text-amber-200 text-sm font-semibold rounded-lg transition shadow flex items-center gap-1">
-                💡 힌트 (<span id="hint-count">3</span>)
+            <!-- 난이도 선택 버튼 -->
+            <div class="flex bg-slate-700/60 p-1 rounded-xl border border-slate-600">
+                <button onclick="changeDifficulty('beginner')" id="btn-beginner" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all bg-blue-600 text-white shadow">초급</button>
+                <button onclick="changeDifficulty('intermediate')" id="btn-intermediate" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-slate-300 hover:text-white">중급</button>
+                <button onclick="changeDifficulty('expert')" id="btn-expert" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-slate-300 hover:text-white">고급</button>
+            </div>
+        </div>
+
+        <!-- 게임 상태 표시판 (LCD 스타일 LED 보드) -->
+        <div class="bg-slate-950 p-3 sm:p-4 rounded-xl flex items-center justify-between mb-4 border border-slate-800 shadow-inner shrink-0">
+            <!-- 남은 지뢰 수 표시 -->
+            <div class="flex items-center gap-2">
+                <span class="text-xs uppercase font-semibold text-slate-400">지뢰</span>
+                <div id="mine-count" class="bg-black text-red-500 font-mono text-xl sm:text-2xl font-bold px-3 py-1 rounded-md tracking-wider border border-red-900/40">
+                    010
+                </div>
+            </div>
+
+            <!-- 리셋 / 스마일 버튼 -->
+            <button onclick="resetGame()" id="face-btn" class="w-11 h-11 sm:w-12 sm:h-12 bg-amber-400 hover:bg-amber-300 active:scale-95 transition-all rounded-full flex items-center justify-center text-2xl shadow-lg border-2 border-amber-500">
+                😊
             </button>
-            <button id="btn-sound" onclick="toggleSound()" class="p-1.5 bg-stone-900 hover:bg-stone-800 border border-amber-800/60 rounded-lg text-amber-400 text-lg transition">
-                🔊
-            </button>
-            <button onclick="confirmReset()" class="p-1.5 bg-stone-900 hover:bg-stone-800 border border-amber-800/60 rounded-lg text-red-400 text-sm font-bold transition">
-                🔄
-            </button>
-        </div>
-    </header>
 
-    <!-- Toast Banner -->
-    <div id="toast-banner" class="fixed top-16 z-50 transform -translate-y-12 opacity-0 transition-all duration-300 pointer-events-none bg-amber-950/90 text-amber-200 border border-amber-600 px-6 py-2.5 rounded-full shadow-2xl text-center font-bold">
-        <span id="toast-message">단서를 발견했습니다!</span>
-    </div>
-
-    <!-- Main Interactive Room Container -->
-    <main class="w-full max-w-5xl my-auto p-2 md:p-4 flex flex-col items-center justify-center">
-        <!-- Room View Box -->
-        <div id="room-canvas-container" class="relative w-full aspect-[16/10] bg-stone-950 rounded-2xl border-2 border-amber-900/80 overflow-hidden shadow-2xl ambient-glow">
-            
-            <!-- Room Background Visual (SVG Base) -->
-            <svg class="w-full h-full absolute inset-0" viewBox="0 0 1000 625" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <!-- Room Walls & Floor Structure -->
-                <rect width="1000" height="625" fill="#0c0a09"/>
-                
-                <!-- Back Wall -->
-                <polygon points="120,80 880,80 880,480 120,480" fill="#1c1917" stroke="#292524" stroke-width="4"/>
-                <path d="M120 80 L0 0 M880 80 L1000 0 M880 480 L1000 625 M120 480 L0 625" stroke="#292524" stroke-width="3"/>
-                <!-- Floor Planks -->
-                <polygon points="120,480 880,480 1000,625 0,625" fill="#181310"/>
-                <line x1="250" y1="480" x2="200" y2="625" stroke="#2a1d17" stroke-width="2"/>
-                <line x1="500" y1="480" x2="500" y2="625" stroke="#2a1d17" stroke-width="2"/>
-                <line x1="750" y1="480" x2="800" y2="625" stroke="#2a1d17" stroke-width="2"/>
-
-                <!-- Candles & Lights -->
-                <!-- Left Candle Sconce -->
-                <path d="M 180 200 Q 170 240 150 250" stroke="#78350f" stroke-width="6" fill="none"/>
-                <ellipse cx="180" cy="195" rx="12" ry="4" fill="#a16207"/>
-                <rect x="176" y="170" width="8" height="25" fill="#fef3c7" rx="2"/>
-                <circle cx="180" cy="162" r="8" fill="#f59e0b" class="candle-flicker"/>
-                <circle cx="180" cy="162" r="18" fill="#fbbf24" opacity="0.25" class="candle-flicker"/>
-
-                <!-- Right Candle Sconce -->
-                <path d="M 820 200 Q 830 240 850 250" stroke="#78350f" stroke-width="6" fill="none"/>
-                <ellipse cx="820" cy="195" rx="12" ry="4" fill="#a16207"/>
-                <rect x="816" y="170" width="8" height="25" fill="#fef3c7" rx="2"/>
-                <circle cx="820" cy="162" r="8" fill="#f59e0b" class="candle-flicker"/>
-                <circle cx="820" cy="162" r="18" fill="#fbbf24" opacity="0.25" class="candle-flicker"/>
-
-                <!-- Wall Alchemy Symbols Background Accent -->
-                <circle cx="500" cy="180" r="45" stroke="#292524" stroke-width="2" stroke-dasharray="4 4" fill="none" opacity="0.5"/>
-            </svg>
-
-
-            <!-- 1. Center Exit Door Hotspot -->
-            <div onclick="openDoorModal()" class="hotspot absolute top-[14%] left-[42%] w-[16%] h-[58%] flex flex-col items-center justify-center group" title="출구 철문">
-                <svg class="w-full h-full" viewBox="0 0 160 360">
-                    <!-- Iron Door Frame & Panel -->
-                    <rect x="5" y="5" width="150" height="350" fill="#1c1917" stroke="#44403c" stroke-width="6" rx="10"/>
-                    <rect x="20" y="25" width="120" height="150" fill="#0c0a09" stroke="#292524" stroke-width="4" rx="5"/>
-                    <rect x="20" y="195" width="120" height="140" fill="#0c0a09" stroke="#292524" stroke-width="4" rx="5"/>
-                    <!-- Metal Lock Console -->
-                    <rect x="110" y="170" width="30" height="45" fill="#292524" stroke="#d97706" stroke-width="2" rx="3"/>
-                    <circle id="door-lock-led" cx="125" cy="182" r="5" fill="#ef4444"/>
-                    <rect x="117" y="193" width="16" height="14" fill="#1c1917" rx="1"/>
-                </svg>
-                <span class="absolute top-[8%] text-xs font-bold text-amber-500/80 bg-stone-900/90 px-2 py-0.5 rounded border border-amber-900 group-hover:text-amber-300">
-                    🔒 출구 철문
-                </span>
-            </div>
-
-            <!-- 2. Left Wall Chess Mural & Safe Hotspot -->
-            <div onclick="openChessSafeModal()" class="hotspot absolute top-[22%] left-[15%] w-[18%] h-[38%] flex flex-col items-center group" title="체스 벽화와 비밀금고">
-                <svg class="w-full h-full" viewBox="0 0 180 240">
-                    <!-- Mural Frame -->
-                    <rect x="10" y="10" width="160" height="130" fill="#27272a" stroke="#78350f" stroke-width="5" rx="4"/>
-                    <rect x="20" y="20" width="140" height="110" fill="#18181b"/>
-                    <!-- Mini Chess Grid Graphics -->
-                    <path d="M 40 20 L 40 130 M 70 20 L 70 130 M 100 20 L 100 130 M 130 20 L 130 130" stroke="#3f3f46" stroke-width="1"/>
-                    <path d="M 20 47 L 160 47 M 20 75 L 160 75 M 20 102 L 160 102" stroke="#3f3f46" stroke-width="1"/>
-                    <!-- Chess Icon Accent -->
-                    <text x="80" y="80" fill="#d4d4d8" font-size="28" text-anchor="middle">♟</text>
-                    
-                    <!-- Wall Safe Below -->
-                    <rect x="30" y="150" width="120" height="80" fill="#18181b" stroke="#71717a" stroke-width="4" rx="4"/>
-                    <circle cx="90" cy="190" r="22" fill="#27272a" stroke="#a1a1aa" stroke-width="3"/>
-                    <circle cx="90" cy="190" r="6" fill="#71717a"/>
-                    <!-- Keypad LED -->
-                    <circle id="safe-led" cx="130" cy="165" r="4" fill="#ef4444"/>
-                </svg>
-                <span class="mt-1 text-xs font-bold text-amber-500/80 bg-stone-900/90 px-2 py-0.5 rounded border border-amber-900 group-hover:text-amber-300">
-                    🖼️ 체스 벽화 & 금고
-                </span>
-            </div>
-
-            <!-- 3. Right Wall Elemental Chart Hotspot -->
-            <div id="elemental-chart-hotspot" onclick="openChartModal()" class="hotspot absolute top-[20%] right-[15%] w-[18%] h-[40%] flex flex-col items-center group" title="연금술 기호표">
-                <svg class="w-full h-full" viewBox="0 0 180 250">
-                    <!-- Parchment Hanging Frame -->
-                    <rect x="15" y="15" width="150" height="210" fill="#261e14" stroke="#a16207" stroke-width="4" rx="6"/>
-                    <line x1="25" y1="50" x2="155" y2="50" stroke="#854d0e" stroke-width="2"/>
-                    <!-- Alchemy Symbols Graphics -->
-                    <circle cx="90" cy="95" r="30" stroke="#d97706" stroke-width="2" fill="none"/>
-                    <polygon points="90,65 116,110 64,110" stroke="#b45309" stroke-width="2" fill="none"/>
-                    <text x="90" y="160" fill="#a16207" font-size="12" text-anchor="middle" font-family="Cinzel">ELEMENTS</text>
-                    <text x="90" y="185" fill="#78350f" font-size="18" text-anchor="middle">🜂 🜄 🜁 3</text>
-                </svg>
-                <span class="mt-1 text-xs font-bold text-amber-500/80 bg-stone-900/90 px-2 py-0.5 rounded border border-amber-900 group-hover:text-amber-300">
-                    📜 연금술 기호표
-                </span>
-            </div>
-
-            <!-- 4. Center Workbench Hotspot -->
-            <div onclick="openWorkbenchModal()" class="hotspot absolute bottom-[8%] left-[28%] w-[44%] h-[36%] flex flex-col items-center group" title="중앙 실험대">
-                <svg class="w-full h-full" viewBox="0 0 440 220">
-                    <!-- Wooden Table Top -->
-                    <polygon points="20,80 420,80 440,160 0,160" fill="#291d12" stroke="#543310" stroke-width="4"/>
-                    <rect x="20" y="160" width="400" height="50" fill="#1c130b" stroke="#3e250c" stroke-width="3"/>
-                    
-                    <!-- Table Drawers -->
-                    <rect x="40" y="168" width="160" height="34" fill="#291d12" stroke="#543310" stroke-width="2" rx="3"/>
-                    <circle cx="120" cy="185" r="5" fill="#d97706"/> <!-- Drawer 1 Handle -->
-                    
-                    <rect x="240" y="168" width="160" height="34" fill="#291d12" stroke="#d97706" stroke-width="2" rx="3"/>
-                    <circle cx="320" cy="185" r="5" fill="#f59e0b"/> <!-- Drawer 2 Locked Handle -->
-                    <text x="320" y="178" fill="#ef4444" font-size="10" text-anchor="middle">🔒</text>
-
-                    <!-- Items on Table (Potion Bottles) -->
-                    <!-- Red Bottle -->
-                    <path d="M 100 75 L 110 75 L 115 90 L 120 115 A 12 12 0 0 1 90 115 L 95 90 Z" fill="#ef4444" opacity="0.85" stroke="#991b1b" stroke-width="2"/>
-                    <rect x="102" y="68" width="6" height="7" fill="#78350f"/>
-                    <!-- Green Bottle -->
-                    <path d="M 150 70 L 160 70 L 165 85 L 175 115 A 15 15 0 0 1 135 115 L 145 85 Z" fill="#22c55e" opacity="0.85" stroke="#166534" stroke-width="2"/>
-                    <rect x="152" y="63" width="6" height="7" fill="#78350f"/>
-                    <!-- Blue Bottle -->
-                    <path d="M 200 80 L 210 80 L 213 92 L 220 115 A 10 10 0 0 1 190 115 L 197 92 Z" fill="#3b82f6" opacity="0.85" stroke="#1e40af" stroke-width="2"/>
-                    <rect x="202" y="73" width="6" height="7" fill="#78350f"/>
-
-                    <!-- Note Parchment on Table -->
-                    <polygon points="270,110 340,105 350,140 280,145" fill="#fef3c7" opacity="0.8" stroke="#b45309"/>
-                    <line x1="280" y1="118" x2="330" y2="114" stroke="#78350f" stroke-width="2"/>
-                    <line x1="283" y1="126" x2="335" y2="122" stroke="#78350f" stroke-width="2"/>
-                </svg>
-                <span class="text-xs font-bold text-amber-500/80 bg-stone-900/90 px-3 py-0.5 rounded border border-amber-900 group-hover:text-amber-300">
-                    🧪 중앙 실험대 & 서랍
-                </span>
-            </div>
-
-        </div>
-    </main>
-
-    <!-- Bottom Inventory System -->
-    <footer class="w-full max-w-5xl px-4 py-3 bg-stone-950/95 border-t border-amber-900/80 z-20 shadow-2xl">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-                <span class="text-amber-400 font-bold text-sm tracking-wider">🧰 소지품 (인벤토리):</span>
-                <span class="text-xs text-amber-600/80 hidden sm:inline">(아이템을 클릭하여 선택 또는 상세 보기)</span>
-            </div>
-            <div id="active-item-status" class="text-xs font-semibold text-purple-400 h-5">
-                <!-- Displays active selected item status -->
+            <!-- 타이머 표시 -->
+            <div class="flex items-center gap-2">
+                <div id="timer" class="bg-black text-emerald-500 font-mono text-xl sm:text-2xl font-bold px-3 py-1 rounded-md tracking-wider border border-emerald-900/40">
+                    000
+                </div>
+                <span class="text-xs uppercase font-semibold text-slate-400">시간</span>
             </div>
         </div>
 
-        <!-- Inventory Slots -->
-        <div id="inventory-slots" class="grid grid-cols-5 gap-2 md:gap-4 mt-2">
-            <!-- Slot 1 -->
-            <div id="slot-0" onclick="handleSlotClick(0)" class="aspect-square bg-stone-900/80 border-2 border-stone-800 rounded-xl flex items-center justify-center relative cursor-pointer hover:border-amber-700/60 transition">
-                <span class="text-stone-700 text-xs">빈 슬롯</span>
-            </div>
-            <!-- Slot 2 -->
-            <div id="slot-1" onclick="handleSlotClick(1)" class="aspect-square bg-stone-900/80 border-2 border-stone-800 rounded-xl flex items-center justify-center relative cursor-pointer hover:border-amber-700/60 transition">
-                <span class="text-stone-700 text-xs">빈 슬롯</span>
-            </div>
-            <!-- Slot 3 -->
-            <div id="slot-2" onclick="handleSlotClick(2)" class="aspect-square bg-stone-900/80 border-2 border-stone-800 rounded-xl flex items-center justify-center relative cursor-pointer hover:border-amber-700/60 transition">
-                <span class="text-stone-700 text-xs">빈 슬롯</span>
-            </div>
-            <!-- Slot 4 -->
-            <div id="slot-3" onclick="handleSlotClick(3)" class="aspect-square bg-stone-900/80 border-2 border-stone-800 rounded-xl flex items-center justify-center relative cursor-pointer hover:border-amber-700/60 transition">
-                <span class="text-stone-700 text-xs">빈 슬롯</span>
-            </div>
-            <!-- Slot 5 -->
-            <div id="slot-4" onclick="handleSlotClick(4)" class="aspect-square bg-stone-900/80 border-2 border-stone-800 rounded-xl flex items-center justify-center relative cursor-pointer hover:border-amber-700/60 transition">
-                <span class="text-stone-700 text-xs">빈 슬롯</span>
-            </div>
-        </div>
-    </footer>
-
-
-    <!-- ==================== MODAL DIALOGS ==================== -->
-
-    <!-- Modal Backdrop -->
-    <div id="modal-backdrop" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 hidden flex items-center justify-center p-4">
-
-        <!-- 1. Workbench Modal -->
-        <div id="modal-workbench" class="parchment max-w-lg w-full p-6 rounded-2xl relative hidden text-amber-100">
-            <button onclick="closeModals()" class="absolute top-3 right-4 text-amber-500 hover:text-amber-200 text-2xl font-bold">✕</button>
-            <h2 class="text-xl font-bold text-amber-400 mb-4 flex items-center gap-2 border-b border-amber-800/60 pb-2">
-                🧪 중앙 실험대
-            </h2>
-            <div class="space-y-4">
-                <p class="text-sm text-stone-300">실험대 위에 색상이 다채로운 시약병 3개와 오래된 노노트, 그리고 단단히 잠긴 오른쪽 서랍이 있습니다.</p>
-                
-                <!-- Bottle Details -->
-                <div class="grid grid-cols-3 gap-2 py-2">
-                    <div class="bg-stone-900/90 p-2 rounded-lg border border-red-900/50 flex flex-col items-center">
-                        <span class="text-2xl mb-1">🔴</span>
-                        <span class="text-xs font-bold text-red-400">붉은 시약</span>
-                        <span class="text-xs text-stone-400 mt-1">라벨: <strong class="text-amber-300 font-mono">Red = 4</strong></span>
-                    </div>
-                    <div class="bg-stone-900/90 p-2 rounded-lg border border-green-900/50 flex flex-col items-center">
-                        <span class="text-2xl mb-1">🟢</span>
-                        <span class="text-xs font-bold text-green-400">초록 시약</span>
-                        <span class="text-xs text-stone-400 mt-1">라벨: <strong class="text-amber-300 font-mono">Green = 7</strong></span>
-                    </div>
-                    <div class="bg-stone-900/90 p-2 rounded-lg border border-blue-900/50 flex flex-col items-center">
-                        <span class="text-2xl mb-1">🔵</span>
-                        <span class="text-xs font-bold text-blue-400">푸른 시약</span>
-                        <span class="text-xs text-stone-400 mt-1">라벨: <strong class="text-amber-300 font-mono">Blue = 2</strong></span>
-                    </div>
-                </div>
-
-                <!-- Workbench Note -->
-                <div class="bg-amber-950/40 p-3 rounded-lg border border-amber-800/80 text-xs leading-relaxed italic text-amber-200">
-                    📜 <strong>실험 노트 구절:</strong><br/>
-                    "빛의 3원색을 파장이 긴 순서대로 조합하여 서랍의 비밀을 풀어라.<br/>
-                    <span class="text-amber-400 font-semibold">(빨강 Red ➔ 초록 Green ➔ 파랑 Blue)</span>"
-                </div>
-
-                <!-- Drawer Keypad Action -->
-                <div class="pt-2 border-t border-amber-900/60 flex justify-between items-center">
-                    <span class="text-xs text-stone-400">서랍 자물쇠 상태: <strong id="workbench-status-text" class="text-red-400">잠김 (3자리 코드)</strong></span>
-                    <button id="btn-open-drawer-lock" onclick="openKeypadModal('drawer')" class="px-4 py-2 bg-amber-700 hover:bg-amber-600 text-stone-950 font-bold rounded-lg text-sm transition">
-                        🔑 자물쇠 조작하기
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 2. Chess Safe Modal -->
-        <div id="modal-chess" class="parchment max-w-lg w-full p-6 rounded-2xl relative hidden text-amber-100">
-            <button onclick="closeModals()" class="absolute top-3 right-4 text-amber-500 hover:text-amber-200 text-2xl font-bold">✕</button>
-            <h2 class="text-xl font-bold text-amber-400 mb-4 flex items-center gap-2 border-b border-amber-800/60 pb-2">
-                🖼️ 체스 벽화 & 비밀금고
-            </h2>
-            <div class="space-y-4">
-                <!-- Mural Illustration -->
-                <div class="bg-stone-900/90 p-4 rounded-xl border border-stone-700 flex flex-col items-center">
-                    <p class="text-xs text-amber-300/90 mb-2 font-semibold text-center">벽면에 그려진 체스 기물 배치도와 새겨진 문구</p>
-                    <div class="text-amber-100/80 text-xs italic bg-stone-950 p-2.5 rounded border border-amber-900/50 w-full text-center">
-                        "기물의 영문 명칭 첫 글자 순서 <strong class="text-amber-400 font-mono">(B ➔ K ➔ N ➔ R)</strong>대로 체스판의 <strong class="text-amber-300">행(숫자 좌표)</strong>만 나열하라."
-                    </div>
-                </div>
-
-                <!-- Safe Action -->
-                <div class="pt-2 border-t border-amber-900/60 flex justify-between items-center">
-                    <span class="text-xs text-stone-400">금고 상태: <strong id="safe-status-text" class="text-red-400">잠김 (4자리 코드)</strong></span>
-                    <button id="btn-open-safe-lock" onclick="openKeypadModal('safe')" class="px-4 py-2 bg-amber-700 hover:bg-amber-600 text-stone-950 font-bold rounded-lg text-sm transition">
-                        🔐 금고 다이얼 입력
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 3. Elemental Chart Modal -->
-        <div id="modal-chart" class="parchment max-w-lg w-full p-6 rounded-2xl relative hidden text-amber-100">
-            <button onclick="closeModals()" class="absolute top-3 right-4 text-amber-500 hover:text-amber-200 text-2xl font-bold">✕</button>
-            <h2 class="text-xl font-bold text-amber-400 mb-4 flex items-center gap-2 border-b border-amber-800/60 pb-2">
-                📜 연금술 원소 기호표
-            </h2>
-            
-            <div class="space-y-4">
-                <!-- Chart Area with UV effect -->
-                <div id="chart-display-area" class="p-6 rounded-xl bg-stone-900 border-2 border-amber-900/60 flex flex-col items-center justify-center transition-all duration-500">
-                    <p class="text-xs text-amber-500 mb-3">고대 연금술사들의 원소 대입 범례:</p>
-                    
-                    <div class="grid grid-cols-4 gap-3 text-center w-full my-2">
-                        <div class="bg-stone-950 p-2 rounded border border-amber-900/40">
-                            <span class="text-amber-400 font-mono font-bold block text-sm">G</span>
-                            <span class="text-xs text-stone-400">= 7</span>
-                        </div>
-                        <div class="bg-stone-950 p-2 rounded border border-amber-900/40">
-                            <span class="text-amber-400 font-mono font-bold block text-sm">O</span>
-                            <span class="text-xs text-stone-400">= 0</span>
-                        </div>
-                        <div class="bg-stone-950 p-2 rounded border border-amber-900/40">
-                            <span class="text-amber-400 font-mono font-bold block text-sm">L</span>
-                            <span class="text-xs text-stone-400">= 1</span>
-                        </div>
-                        <div class="bg-stone-950 p-2 rounded border border-amber-900/40">
-                            <span class="text-amber-400 font-mono font-bold block text-sm">D</span>
-                            <span class="text-xs text-stone-400">= 4</span>
-                        </div>
-                    </div>
-
-                    <!-- Glowing UV secret text container -->
-                    <div id="uv-secret-container" class="mt-4 p-3 w-full rounded text-center min-h-[50px] flex items-center justify-center border border-dashed border-stone-800">
-                        <span id="uv-secret-text" class="text-sm text-stone-600 italic">
-                            육안으로는 아무것도 더 보이지 않습니다... (특수한 빛이 필요할지 모릅니다)
-                        </span>
-                    </div>
-                </div>
-
-                <div class="text-xs text-stone-400 text-center">
-                    💡 <span id="uv-hint-text">인벤토리에서 'UV 랜턴'을 선택한 후 이 액자를 다시 살펴보세요!</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- 4. Exit Door Keypad Modal -->
-        <div id="modal-door" class="parchment max-w-lg w-full p-6 rounded-2xl relative hidden text-amber-100">
-            <button onclick="closeModals()" class="absolute top-3 right-4 text-amber-500 hover:text-amber-200 text-2xl font-bold">✕</button>
-            <h2 class="text-xl font-bold text-amber-400 mb-2 flex items-center gap-2 border-b border-amber-800/60 pb-2">
-                🚪 탈출구 전자 잠금장치
-            </h2>
-            <p class="text-xs text-stone-300 mb-4">연구실의 최종 출구입니다. 연금술 기호표의 비문을 해독한 4자리 암호를 입력하십시오.</p>
-
-            <div class="flex justify-center">
-                <button onclick="openKeypadModal('door')" class="w-full py-3 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-stone-950 font-extrabold rounded-xl shadow-lg transition tracking-wide text-base">
-                    🔢 4자리 암호 키패드 입력하기
+        <!-- 상단 툴바 (모바일 깃발 모드 및 줌 제어) -->
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3 bg-slate-700/40 px-3 py-2 rounded-xl border border-slate-700 shrink-0">
+            <div class="flex items-center gap-2">
+                <span class="text-xs sm:text-sm font-medium text-slate-300">📱 깃발 모드</span>
+                <span id="flag-mode-status" class="text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-slate-600 text-slate-300">끄기</span>
+                <button onclick="toggleFlagMode()" id="flag-mode-btn" class="ml-1 px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-600 hover:bg-slate-500 transition-all text-white">
+                    토글 켜기
                 </button>
             </div>
-        </div>
 
-        <!-- 5. Dynamic Interactive Keypad Modal -->
-        <div id="modal-keypad" class="bg-stone-900 border-2 border-amber-600 max-w-xs w-full p-5 rounded-2xl relative hidden shadow-2xl z-50">
-            <button onclick="closeKeypadModal()" class="absolute top-2 right-3 text-stone-400 hover:text-white text-xl">✕</button>
-            <h3 id="keypad-title" class="text-center font-bold text-amber-400 text-base mb-3">키패드 입력</h3>
-            
-            <!-- LED Code Display -->
-            <div class="bg-black border-2 border-amber-900 rounded-lg p-3 mb-4 text-center">
-                <div id="keypad-display" class="font-mono text-2xl font-extrabold text-amber-400 tracking-widest min-h-[36px] flex items-center justify-center">
-                    ----
-                </div>
-            </div>
-
-            <!-- Keypad Buttons -->
-            <div class="grid grid-cols-3 gap-2">
-                <button onclick="pressKey('1')" class="py-3 bg-stone-800 hover:bg-stone-700 border border-stone-600 rounded-lg font-bold text-lg text-amber-200 active:scale-95 transition">1</button>
-                <button onclick="pressKey('2')" class="py-3 bg-stone-800 hover:bg-stone-700 border border-stone-600 rounded-lg font-bold text-lg text-amber-200 active:scale-95 transition">2</button>
-                <button onclick="pressKey('3')" class="py-3 bg-stone-800 hover:bg-stone-700 border border-stone-600 rounded-lg font-bold text-lg text-amber-200 active:scale-95 transition">3</button>
-                <button onclick="pressKey('4')" class="py-3 bg-stone-800 hover:bg-stone-700 border border-stone-600 rounded-lg font-bold text-lg text-amber-200 active:scale-95 transition">4</button>
-                <button onclick="pressKey('5')" class="py-3 bg-stone-800 hover:bg-stone-700 border border-stone-600 rounded-lg font-bold text-lg text-amber-200 active:scale-95 transition">5</button>
-                <button onclick="pressKey('6')" class="py-3 bg-stone-800 hover:bg-stone-700 border border-stone-600 rounded-lg font-bold text-lg text-amber-200 active:scale-95 transition">6</button>
-                <button onclick="pressKey('7')" class="py-3 bg-stone-800 hover:bg-stone-700 border border-stone-600 rounded-lg font-bold text-lg text-amber-200 active:scale-95 transition">7</button>
-                <button onclick="pressKey('8')" class="py-3 bg-stone-800 hover:bg-stone-700 border border-stone-600 rounded-lg font-bold text-lg text-amber-200 active:scale-95 transition">8</button>
-                <button onclick="pressKey('9')" class="py-3 bg-stone-800 hover:bg-stone-700 border border-stone-600 rounded-lg font-bold text-lg text-amber-200 active:scale-95 transition">9</button>
-                <button onclick="clearKeypad()" class="py-3 bg-red-950 hover:bg-red-900 border border-red-700 rounded-lg font-bold text-sm text-red-200 active:scale-95 transition">CLR</button>
-                <button onclick="pressKey('0')" class="py-3 bg-stone-800 hover:bg-stone-700 border border-stone-600 rounded-lg font-bold text-lg text-amber-200 active:scale-95 transition">0</button>
-                <button onclick="submitKeypad()" class="py-3 bg-emerald-800 hover:bg-emerald-700 border border-emerald-600 rounded-lg font-bold text-sm text-emerald-100 active:scale-95 transition">OK</button>
+            <!-- 줌 / 패닝 안내 및 제어 버튼 -->
+            <div class="flex items-center gap-1.5">
+                <span class="text-xs text-slate-400 hidden md:inline">🔍 줌:</span>
+                <button onclick="zoomBoard(-0.1)" class="w-7 h-7 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-bold flex items-center justify-center border border-slate-600 text-sm" title="축소">-</button>
+                <span id="zoom-level-text" class="text-xs font-mono text-slate-300 w-10 text-center">100%</span>
+                <button onclick="zoomBoard(0.1)" class="w-7 h-7 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-bold flex items-center justify-center border border-slate-600 text-sm" title="확대">+</button>
+                <button onclick="resetZoom()" class="px-2 py-1 text-[11px] bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-300 border border-slate-600 ml-1">초기화</button>
             </div>
         </div>
 
-        <!-- 6. Item Detail Inspection Modal -->
-        <div id="modal-item-detail" class="parchment max-w-sm w-full p-5 rounded-2xl relative hidden text-amber-100 text-center">
-            <button onclick="closeItemDetailModal()" class="absolute top-2 right-3 text-amber-500 hover:text-amber-200 text-xl font-bold">✕</button>
-            <div id="item-detail-icon" class="text-5xl my-2">📦</div>
-            <h3 id="item-detail-title" class="text-lg font-bold text-amber-400 mb-2">아이템 이름</h3>
-            <p id="item-detail-desc" class="text-xs text-stone-300 leading-relaxed bg-stone-900/80 p-3 rounded-lg border border-amber-900/50 mb-3">
-                아이템 상세 설명이 들어갑니다.
-            </p>
-            <button id="btn-use-item" onclick="toggleItemSelectFromDetail()" class="w-full py-2 bg-amber-700 hover:bg-amber-600 text-stone-950 font-bold rounded-lg text-xs transition">
-                선택하기 / 해제하기
+        <!-- 게임 보드 드래그 가능 뷰포트 컨테이너 -->
+        <div id="viewport-container" class="relative flex-1 bg-slate-950 rounded-xl border border-slate-800 overflow-auto custom-scrollbar cursor-grab active:cursor-grabbing shadow-inner flex items-center justify-center p-4">
+            <!-- 내부 스케일링 컨테이너 -->
+            <div id="board-scaler" class="transition-transform duration-75 origin-center flex items-center justify-center p-8">
+                <div id="board" class="grid gap-1"></div>
+            </div>
+        </div>
+
+        <!-- 최고 기록 표시 영역 -->
+        <div class="mt-3 flex justify-between items-center text-xs text-slate-400 bg-slate-900/80 px-4 py-2.5 rounded-xl border border-slate-800 shrink-0">
+            <span>🏆 최고 기록 (Best Time)</span>
+            <span id="best-time" class="font-mono font-semibold text-amber-400">-- 초</span>
+        </div>
+    </div>
+
+    <!-- 승리/패배 모달 팝업 알림 박스 -->
+    <div id="message-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl cell-pop">
+            <div id="modal-icon" class="text-5xl mb-3">🎉</div>
+            <h3 id="modal-title" class="text-xl font-bold text-white mb-2">게임 승리!</h3>
+            <p id="modal-desc" class="text-sm text-slate-300 mb-6">기록: 15초</p>
+            <button onclick="closeModal(); resetGame();" class="w-full py-3 bg-blue-600 hover:bg-blue-500 transition-all text-white font-semibold rounded-xl shadow-lg">
+                다시 하기
             </button>
         </div>
-
-        <!-- 7. Progressive Hint Modal -->
-        <div id="modal-hint" class="parchment max-w-md w-full p-5 rounded-2xl relative hidden text-amber-100">
-            <button onclick="closeModals()" class="absolute top-2 right-3 text-amber-500 hover:text-amber-200 text-xl font-bold">✕</button>
-            <h3 class="text-lg font-bold text-amber-400 mb-3 flex items-center gap-2 border-b border-amber-800/60 pb-2">
-                💡 연금술사의 힌트
-            </h3>
-            <div id="hint-content-list" class="space-y-2 text-xs leading-relaxed">
-                <!-- Hint List Populated Dynamically -->
-            </div>
-        </div>
-
-        <!-- 8. Game Victory Screen Modal -->
-        <div id="modal-victory" class="bg-stone-950 border-4 border-amber-500 max-w-lg w-full p-8 rounded-2xl relative hidden text-center shadow-2xl z-50">
-            <canvas id="confetti-canvas" class="absolute inset-0 pointer-events-none w-full h-full"></canvas>
-            <div class="text-6xl mb-3">🎉 🗝️ 🔓</div>
-            <h2 class="text-2xl md:text-3xl font-extrabold text-amber-400 cinzel-font mb-2">탈출 성공!</h2>
-            <p class="text-sm text-stone-300 mb-6">축하합니다! 당신은 연금술사의 비밀 연구실의 모든 암호를 풀고 무사히 탈출했습니다.</p>
-
-            <!-- Results Summary Card -->
-            <div class="bg-stone-900 border border-amber-800 p-4 rounded-xl mb-6 space-y-2 text-sm text-left">
-                <div class="flex justify-between border-b border-stone-800 pb-1">
-                    <span class="text-stone-400">남은 시간:</span>
-                    <span id="final-time-left" class="font-bold text-amber-300 font-mono">14:25</span>
-                </div>
-                <div class="flex justify-between border-b border-stone-800 pb-1">
-                    <span class="text-stone-400">사용한 힌트:</span>
-                    <span id="final-hints-used" class="font-bold text-amber-300">1개</span>
-                </div>
-                <div class="flex justify-between pt-1">
-                    <span class="text-stone-400 font-bold">최종 탈출 등급:</span>
-                    <span id="final-rank" class="font-extrabold text-xl text-amber-400 cinzel-font">S CLASS</span>
-                </div>
-            </div>
-
-            <button onclick="resetGame()" class="w-full py-3 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-stone-950 font-extrabold rounded-xl text-base shadow-lg transition">
-                🎮 다시 도전하기
-            </button>
-        </div>
-
     </div>
 
     <script>
-        /* ==================== WEB AUDIO API SYNTHESIZER ==================== */
-        class SoundFX {
-            constructor() {
-                this.ctx = null;
-                this.muted = false;
-            }
+        // 난이도 설정 객체
+        const difficulties = {
+            beginner: { rows: 9, cols: 9, mines: 10, name: '초급' },
+            intermediate: { rows: 16, cols: 16, mines: 40, name: '중급' },
+            expert: { rows: 16, cols: 30, mines: 99, name: '고급' }
+        };
 
-            init() {
-                if (!this.ctx) {
-                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                    this.ctx = new AudioCtx();
+        let currentDifficulty = 'beginner';
+        let rows = difficulties[currentDifficulty].rows;
+        let cols = difficulties[currentDifficulty].cols;
+        let totalMines = difficulties[currentDifficulty].mines;
+
+        let board = [];
+        let gameOver = false;
+        let gameWon = false;
+        let firstClick = true;
+        let flaggedCount = 0;
+        let timerInterval = null;
+        let timeElapsed = 0;
+        let flagModeActive = false;
+        let currentZoom = 1.0;
+
+        // DOM 요소 캐싱
+        const viewportContainer = document.getElementById('viewport-container');
+        const boardScaler = document.getElementById('board-scaler');
+        const boardEl = document.getElementById('board');
+        const mineCountEl = document.getElementById('mine-count');
+        const timerEl = document.getElementById('timer');
+        const faceBtnEl = document.getElementById('face-btn');
+        const bestTimeEl = document.getElementById('best-time');
+        const modalEl = document.getElementById('message-modal');
+        const modalIconEl = document.getElementById('modal-icon');
+        const modalTitleEl = document.getElementById('modal-title');
+        const modalDescEl = document.getElementById('modal-desc');
+        const flagModeBtnEl = document.getElementById('flag-mode-btn');
+        const flagModeStatusEl = document.getElementById('flag-mode-status');
+        const zoomLevelText = document.getElementById('zoom-level-text');
+
+        // 마우스 드래그 패닝(Panning) 상태 변수
+        let isPanning = false;
+        let startX, startY, scrollLeft, scrollTop;
+
+        window.onload = function() {
+            initGame();
+            setupPanningEvents();
+        };
+
+        // 드래그 패닝 이벤트 설정 (마우스 및 터치 지원)
+        function setupPanningEvents() {
+            viewportContainer.addEventListener('mousedown', (e) => {
+                // 우클릭이나 셀 직접 클릭 시 패닝 방지 (단, 공백 영역 드래그 시 패닝 활성화)
+                if (e.button !== 0) return; 
+                isPanning = true;
+                viewportContainer.classList.add('cursor-grabbing');
+                startX = e.pageX - viewportContainer.offsetLeft;
+                startY = e.pageY - viewportContainer.offsetTop;
+                scrollLeft = viewportContainer.scrollLeft;
+                scrollTop = viewportContainer.scrollTop;
+            });
+
+            viewportContainer.addEventListener('mouseleave', () => {
+                isPanning = false;
+                viewportContainer.classList.remove('cursor-grabbing');
+            });
+
+            viewportContainer.addEventListener('mouseup', () => {
+                isPanning = false;
+                viewportContainer.classList.remove('cursor-grabbing');
+            });
+
+            viewportContainer.addEventListener('mousemove', (e) => {
+                if (!isPanning) return;
+                e.preventDefault();
+                const x = e.pageX - viewportContainer.offsetLeft;
+                const y = e.pageY - viewportContainer.offsetTop;
+                const walkX = (x - startX) * 1.5;
+                const walkY = (y - startY) * 1.5;
+                viewportContainer.scrollLeft = scrollLeft - walkX;
+                viewportContainer.scrollTop = scrollTop - walkY;
+            });
+        }
+
+        // 줌 제어 함수
+        function zoomBoard(amount) {
+            currentZoom += amount;
+            if (currentZoom < 0.5) currentZoom = 0.5;
+            if (currentZoom > 2.0) currentZoom = 2.0;
+            applyZoom();
+        }
+
+        function resetZoom() {
+            currentZoom = 1.0;
+            applyZoom();
+        }
+
+        function applyZoom() {
+            boardScaler.style.transform = `scale(${currentZoom})`;
+            zoomLevelText.textContent = `${Math.round(currentZoom * 100)}%`;
+        }
+
+        // 난이도 변경 함수
+        function changeDifficulty(diff) {
+            currentDifficulty = diff;
+            rows = difficulties[diff].rows;
+            cols = difficulties[diff].cols;
+            totalMines = difficulties[diff].mines;
+
+            ['beginner', 'intermediate', 'expert'].forEach(d => {
+                const btn = document.getElementById(`btn-${d}`);
+                if (d === diff) {
+                    btn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all bg-blue-600 text-white shadow";
+                } else {
+                    btn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-slate-300 hover:text-white";
                 }
+            });
+
+            // 난이도별 기본 줌 레벨 최적화 (고급은 기본 줌을 약간 맞춤 혹은 1.0)
+            if (diff === 'expert') {
+                currentZoom = 0.85;
+            } else {
+                currentZoom = 1.0;
+            }
+            applyZoom();
+            resetGame();
+        }
+
+        // 게임판 초기화
+        function initGame() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            timeElapsed = 0;
+            gameOver = false;
+            gameWon = false;
+            firstClick = true;
+            flaggedCount = 0;
+            
+            updateTimerDisplay();
+            updateMineCountDisplay();
+            faceBtnEl.textContent = '😊';
+            loadBestTime();
+
+            board = [];
+            for (let r = 0; r < rows; r++) {
+                let rowArr = [];
+                for (let c = 0; c < cols; c++) {
+                    rowArr.push({
+                        mine: false,
+                        revealed: false,
+                        flagged: false,
+                        count: 0
+                    });
+                }
+                board.push(rowArr);
             }
 
-            playClick() {
-                if (this.muted) return;
-                this.init();
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(600, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(200, this.ctx.currentTime + 0.05);
-                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start();
-                osc.stop(this.ctx.currentTime + 0.05);
-            }
+            renderBoard();
+        }
 
-            playUnlock() {
-                if (this.muted) return;
-                this.init();
-                const now = this.ctx.currentTime;
-                [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(freq, now + idx * 0.08);
-                    gain.gain.setValueAtTime(0.2, now + idx * 0.08);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.3);
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-                    osc.start(now + idx * 0.08);
-                    osc.stop(now + idx * 0.08 + 0.3);
-                });
-            }
+        // 보드 DOM 렌더링
+        function renderBoard() {
+            boardEl.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+            boardEl.innerHTML = '';
 
-            playError() {
-                if (this.muted) return;
-                this.init();
-                const now = this.ctx.currentTime;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(150, now);
-                osc.frequency.setValueAtTime(120, now + 0.1);
-                gain.gain.setValueAtTime(0.2, now);
-                gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start(now);
-                osc.stop(now + 0.25);
-            }
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const cell = document.createElement('div');
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+                    // 적당한 셀 크기 확보 (w-8 h-8 등 유지하여 좁아지는 문제 방지 및 스크롤 패닝으로 탐색)
+                    cell.className = "w-8 h-8 flex items-center justify-center text-sm font-bold rounded cursor-pointer select-none transition-colors duration-100 shrink-0";
+                    
+                    updateCellDOM(cell, board[r][c]);
 
-            playUV() {
-                if (this.muted) return;
-                this.init();
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(300, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(900, this.ctx.currentTime + 0.2);
-                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start();
-                osc.stop(this.ctx.currentTime + 0.2);
-            }
+                    cell.addEventListener('click', (e) => handleCellClick(r, c));
+                    cell.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        handleCellRightClick(r, c);
+                    });
 
-            playFanfare() {
-                if (this.muted) return;
-                this.init();
-                const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99];
-                const now = this.ctx.currentTime;
-                notes.forEach((freq, i) => {
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(freq, now + i * 0.12);
-                    gain.gain.setValueAtTime(0.25, now + i * 0.12);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.5);
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-                    osc.start(now + i * 0.12);
-                    osc.stop(now + i * 0.12 + 0.5);
-                });
+                    boardEl.appendChild(cell);
+                }
             }
         }
 
-        const audio = new SoundFX();
-
-        /* ==================== GAME STATE & ITEMS ==================== */
-        const ITEMS_DB = {
-            chess_card: {
-                id: 'chess_card',
-                name: '체스 기물 카드',
-                icon: '🃏',
-                desc: '체스 기물의 좌표 정보가 적혀 있습니다:\n• 비숍 (Bishop): A8\n• 킹 (King): D3\n• 나이트 (Knight): F5\n• 룩 (Rook): C2'
-            },
-            small_key: {
-                id: 'small_key',
-                name: '작은 열쇠',
-                icon: '🔑',
-                desc: '정교하게 다듬어진 장식용 열쇠입니다.'
-            },
-            uv_lantern: {
-                id: 'uv_lantern',
-                name: 'UV (자외선) 랜턴',
-                icon: '🔦',
-                desc: '특수 보라색 빛을 비추어 숨겨진 자외선 야광 문자를 밝혀내는 휴대용 랜턴입니다.'
+        function updateCellDOM(cellEl, cellData) {
+            if (cellData.revealed) {
+                if (cellData.mine) {
+                    cellEl.className = "w-8 h-8 flex items-center justify-center text-sm font-bold rounded bg-red-600 text-white shadow-inner cell-pop shrink-0";
+                    cellEl.textContent = '💣';
+                } else {
+                    cellEl.className = "w-8 h-8 flex items-center justify-center text-sm font-bold rounded bg-slate-800 border border-slate-700/50 shrink-0";
+                    if (cellData.count > 0) {
+                        cellEl.textContent = cellData.count;
+                        const colors = {
+                            1: 'text-blue-400',
+                            2: 'text-emerald-400',
+                            3: 'text-rose-400',
+                            4: 'text-indigo-400',
+                            5: 'text-amber-400',
+                            6: 'text-teal-400',
+                            7: 'text-purple-400',
+                            8: 'text-pink-400'
+                        };
+                        cellEl.className += ` ${colors[cellData.count] || 'text-white'}`;
+                    } else {
+                        cellEl.textContent = '';
+                    }
+                }
+            } else {
+                if (cellData.flagged) {
+                    cellEl.className = "w-8 h-8 flex items-center justify-center text-sm font-bold rounded bg-slate-700 hover:bg-slate-600 shadow border-t border-slate-600 cell-pop shrink-0";
+                    cellEl.textContent = '🚩';
+                } else {
+                    cellEl.className = "w-8 h-8 flex items-center justify-center text-sm font-bold rounded bg-slate-700 hover:bg-slate-600 shadow border-t border-slate-600 transition-all shrink-0";
+                    cellEl.textContent = '';
+                }
             }
-        };
+        }
 
-        let gameState = {
-            timerSeconds: 1200, // 20 minutes
-            timerInterval: null,
-            inventory: [], // Item IDs
-            selectedItemId: null,
-            hintsLeft: 3,
-            hintsUsedCount: 0,
+        function placeMines(initialR, initialC) {
+            let placed = 0;
+            while (placed < totalMines) {
+                let r = Math.floor(Math.random() * rows);
+                let c = Math.floor(Math.random() * cols);
+
+                if (Math.abs(r - initialR) <= 1 && Math.abs(c - initialC) <= 1) continue;
+                if (board[r][c].mine) continue;
+
+                board[r][c].mine = true;
+                placed++;
+            }
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (!board[r][c].mine) {
+                        let count = 0;
+                        for (let dr = -1; dr <= 1; dr++) {
+                            for (let dc = -1; dc <= 1; dc++) {
+                                let nr = r + dr;
+                                let nc = c + dc;
+                                if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && board[nr][nc].mine) {
+                                    count++;
+                                }
+                            }
+                        }
+                        board[r][c].count = count;
+                    }
+                }
+            }
+        }
+
+        function handleCellClick(r, c) {
+            if (gameOver || gameWon) return;
+
+            let cell = board[r][c];
+            if (cell.flagged) return;
+
+            if (flagModeActive) {
+                handleCellRightClick(r, c);
+                return;
+            }
+
+            if (firstClick) {
+                firstClick = false;
+                placeMines(r, c);
+                startTimer();
+            }
+
+            if (cell.revealed && cell.count > 0) {
+                let flagCount = 0;
+                for (let dr = -1; dr <= 1; dr++) {
+                    for (let dc = -1; dc <= 1; dc++) {
+                        let nr = r + dr;
+                        let nc = c + dc;
+                        if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && board[nr][nc].flagged) {
+                            flagCount++;
+                        }
+                    }
+                }
+
+                if (flagCount === cell.count) {
+                    for (let dr = -1; dr <= 1; dr++) {
+                        for (let dc = -1; dc <= 1; dc++) {
+                            let nr = r + dr;
+                            let nc = c + dc;
+                            if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && !board[nr][nc].flagged && !board[nr][nc].revealed) {
+                                revealCell(nr, nc);
+                            }
+                        }
+                    }
+                }
+                checkWinCondition();
+                refreshBoardDOM();
+                return;
+            }
+
+            if (cell.revealed) return;
+
+            revealCell(r, c);
+            checkWinCondition();
+            refreshBoardDOM();
+        }
+
+        function revealCell(r, c) {
+            let cell = board[r][c];
+            if (cell.revealed || cell.flagged) return;
+
+            cell.revealed = true;
+
+            if (cell.mine) {
+                triggerGameOver(r, c);
+                return;
+            }
+
+            if (cell.count === 0) {
+                for (let dr = -1; dr <= 1; dr++) {
+                    for (let dc = -1; dc <= 1; dc++) {
+                        let nr = r + dr;
+                        let nc = c + dc;
+                        if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && !board[nr][nc].revealed) {
+                            revealCell(nr, nc);
+                        }
+                    }
+                }
+            }
+        }
+
+        function handleCellRightClick(r, c) {
+            if (gameOver || gameWon) return;
+
+            let cell = board[r][c];
+            if (cell.revealed) return;
+
+            cell.flagged = !cell.flagged;
+            if (cell.flagged) {
+                flaggedCount++;
+            } else {
+                flaggedCount--;
+            }
+
+            updateMineCountDisplay();
+            refreshBoardDOM();
+        }
+
+        function refreshBoardDOM() {
+            const cells = boardEl.children;
+            for (let i = 0; i < cells.length; i++) {
+                let cellEl = cells[i];
+                let r = parseInt(cellEl.dataset.row);
+                let c = parseInt(cellEl.dataset.col);
+                updateCellDOM(cellEl, board[r][c]);
+            }
+        }
+
+        function checkWinCondition() {
+            if (gameOver) return;
+
+            let won = true;
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (!board[r][c].mine && !board[r][c].revealed) {
+                        won = false;
+                        break;
+                    }
+                }
+                if (!won) break;
+            }
+
+            if (won) {
+                gameWon = true;
+                clearInterval(timerInterval);
+                faceBtnEl.textContent = '😎';
+                saveBestTime();
+                showModal(true);
+            }
+        }
+
+        function triggerGameOver(hitR, hitC) {
+            gameOver = true;
+            clearInterval(timerInterval);
+            faceBtnEl.textContent = '😵';
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (board[r][c].mine) {
+                        board[r][c].revealed = true;
+                    }
+                }
+            }
+            refreshBoardDOM();
             
-            // Puzzle Progress Flags
-            workbenchUnlocked: false, // Code: 472
-            safeUnlocked: false,      // Code: 8352
-            chartDiscovered: false,   // Revealed GOLD
-            doorUnlocked: false,       // Code: 7014
+            const cells = boardEl.children;
+            for (let i = 0; i < cells.length; i++) {
+                let cellEl = cells[i];
+                let r = parseInt(cellEl.dataset.row);
+                let c = parseInt(cellEl.dataset.col);
+                if (r === hitR && c === hitC) {
+                    cellEl.classList.add('bg-rose-700', 'animate-bounce');
+                }
+            }
 
-            // Active Keypad State
-            activeKeypadTarget: null, // 'drawer', 'safe', 'door'
-            keypadInput: ''
-        };
-
-        /* ==================== INITIALIZATION & TIMER ==================== */
-        window.onload = function() {
-            startTimer();
-            renderInventory();
-        };
+            showModal(false);
+        }
 
         function startTimer() {
-            clearInterval(gameState.timerInterval);
-            gameState.timerInterval = setInterval(() => {
-                if (gameState.timerSeconds > 0) {
-                    gameState.timerSeconds--;
-                    updateTimerDisplay();
-                } else {
-                    clearInterval(gameState.timerInterval);
-                    alert("⏰ 시간이 초과되었습니다! 연구실의 함정이 가동되었습니다.");
-                    resetGame();
-                }
+            timerInterval = setInterval(() => {
+                timeElapsed++;
+                if (timeElapsed > 999) timeElapsed = 999;
+                updateTimerDisplay();
             }, 1000);
         }
 
         function updateTimerDisplay() {
-            const m = Math.floor(gameState.timerSeconds / 60).toString().padStart(2, '0');
-            const s = (gameState.timerSeconds % 60).toString().padStart(2, '0');
-            document.getElementById('timer-display').innerText = `${m}:${s}`;
+            timerEl.textContent = String(timeElapsed).padStart(3, '0');
         }
 
-        /* ==================== INVENTORY SYSTEM ==================== */
-        function addItemToInventory(itemId) {
-            if (!gameState.inventory.includes(itemId) && gameState.inventory.length < 5) {
-                gameState.inventory.push(itemId);
-                renderInventory();
-                showToast(`🎒 아이템 획득: [${ITEMS_DB[itemId].name}]`);
-                audio.playUnlock();
-            }
-        }
-
-        function renderInventory() {
-            for (let i = 0; i < 5; i++) {
-                const slotEl = document.getElementById(`slot-${i}`);
-                const itemId = gameState.inventory[i];
-
-                if (itemId) {
-                    const item = ITEMS_DB[itemId];
-                    const isSelected = gameState.selectedItemId === itemId;
-                    slotEl.innerHTML = `
-                        <div class="flex flex-col items-center justify-center">
-                            <span class="text-2xl">${item.icon}</span>
-                            <span class="text-[10px] font-bold text-amber-300 mt-1 truncate max-w-[50px]">${item.name}</span>
-                        </div>
-                        ${isSelected ? '<div class="absolute -top-1 -right-1 w-3 h-3 bg-purple-500 rounded-full border border-white"></div>' : ''}
-                    `;
-                    slotEl.className = `aspect-square bg-stone-900 border-2 ${isSelected ? 'border-purple-500 uv-active' : 'border-amber-700/80'} rounded-xl flex items-center justify-center relative cursor-pointer hover:scale-105 transition`;
-                } else {
-                    slotEl.innerHTML = `<span class="text-stone-700 text-xs">빈 슬롯</span>`;
-                    slotEl.className = `aspect-square bg-stone-900/80 border-2 border-stone-800 rounded-xl flex items-center justify-center relative cursor-pointer hover:border-amber-700/60 transition`;
-                }
-            }
-
-            const statusEl = document.getElementById('active-item-status');
-            if (gameState.selectedItemId) {
-                const activeItem = ITEMS_DB[gameState.selectedItemId];
-                statusEl.innerText = `✨ 사용 중: ${activeItem.name}`;
-            } else {
-                statusEl.innerText = '';
-            }
-        }
-
-        function handleSlotClick(index) {
-            audio.playClick();
-            const itemId = gameState.inventory[index];
-            if (!itemId) return;
-
-            openItemDetailModal(itemId);
-        }
-
-        function openItemDetailModal(itemId) {
-            const item = ITEMS_DB[itemId];
-            document.getElementById('item-detail-icon').innerText = item.icon;
-            document.getElementById('item-detail-title').innerText = item.name;
-            document.getElementById('item-detail-desc').innerText = item.desc;
-
-            const btn = document.getElementById('btn-use-item');
-            if (gameState.selectedItemId === itemId) {
-                btn.innerText = '선택 해제하기';
-                btn.className = 'w-full py-2 bg-stone-700 hover:bg-stone-600 text-stone-200 font-bold rounded-lg text-xs transition';
-            } else {
-                btn.innerText = '아이템 장착/선택하기';
-                btn.className = 'w-full py-2 bg-purple-700 hover:bg-purple-600 text-white font-bold rounded-lg text-xs transition';
-            }
-
-            btn.onclick = () => {
-                if (gameState.selectedItemId === itemId) {
-                    gameState.selectedItemId = null;
-                    showToast('아이템 선택을 해제했습니다.');
-                } else {
-                    gameState.selectedItemId = itemId;
-                    showToast(`[${item.name}]을(를) 선택했습니다.`);
-                    if (itemId === 'uv_lantern') audio.playUV();
-                }
-                renderInventory();
-                closeItemDetailModal();
-            };
-
-            document.getElementById('modal-backdrop').classList.remove('hidden');
-            document.getElementById('modal-item-detail').classList.remove('hidden');
-        }
-
-        function closeItemDetailModal() {
-            document.getElementById('modal-item-detail').classList.add('hidden');
-            if (!hasOpenModals()) {
-                document.getElementById('modal-backdrop').classList.add('hidden');
-            }
-        }
-
-        /* ==================== ROOM MODAL HANDLERS ==================== */
-        function openWorkbenchModal() {
-            audio.playClick();
-            document.getElementById('modal-backdrop').classList.remove('hidden');
-            document.getElementById('modal-workbench').classList.remove('hidden');
-
-            const statusText = document.getElementById('workbench-status-text');
-            const btnKeypad = document.getElementById('btn-open-drawer-lock');
-            if (gameState.workbenchUnlocked) {
-                statusText.innerText = '해제됨 (열림)';
-                statusText.className = 'text-emerald-400 font-bold';
-                btnKeypad.innerText = '✅ 서랍이 열려있습니다';
-                btnKeypad.disabled = true;
-                btnKeypad.className = 'px-4 py-2 bg-stone-800 text-stone-500 font-bold rounded-lg text-sm cursor-not-allowed';
-            }
-        }
-
-        function openChessSafeModal() {
-            audio.playClick();
-            document.getElementById('modal-backdrop').classList.remove('hidden');
-            document.getElementById('modal-chess').classList.remove('hidden');
-
-            const statusText = document.getElementById('safe-status-text');
-            const btnKeypad = document.getElementById('btn-open-safe-lock');
-            if (gameState.safeUnlocked) {
-                statusText.innerText = '해제됨 (열림)';
-                statusText.className = 'text-emerald-400 font-bold';
-                btnKeypad.innerText = '✅ 금고가 열려있습니다';
-                btnKeypad.disabled = true;
-                btnKeypad.className = 'px-4 py-2 bg-stone-800 text-stone-500 font-bold rounded-lg text-sm cursor-not-allowed';
-            }
-        }
-
-        function openChartModal() {
-            audio.playClick();
-            document.getElementById('modal-backdrop').classList.remove('hidden');
-            document.getElementById('modal-chart').classList.remove('hidden');
-
-            const chartArea = document.getElementById('chart-display-area');
-            const uvSecretContainer = document.getElementById('uv-secret-container');
-            const uvSecretText = document.getElementById('uv-secret-text');
-
-            // Check if UV Lantern is selected/equipped
-            if (gameState.selectedItemId === 'uv_lantern') {
-                chartArea.classList.add('uv-active');
-                uvSecretContainer.className = "mt-4 p-3 w-full rounded text-center bg-purple-950/80 border-2 border-purple-500 shadow-lg";
-                uvSecretText.className = "uv-glowing-text text-xl font-bold tracking-widest animate-pulse";
-                uvSecretText.innerText = "✨ 숨겨진 야광 비문: G O L D ✨";
-                gameState.chartDiscovered = true;
-                audio.playUV();
-            } else {
-                chartArea.classList.remove('uv-active');
-                uvSecretContainer.className = "mt-4 p-3 w-full rounded text-center min-h-[50px] flex items-center justify-center border border-dashed border-stone-800";
-                uvSecretText.className = "text-sm text-stone-500 italic";
-                uvSecretText.innerText = "육안으로는 아무것도 더 보이지 않습니다... (UV 랜턴이 필요합니다)";
-            }
-        }
-
-        function openDoorModal() {
-            audio.playClick();
-            document.getElementById('modal-backdrop').classList.remove('hidden');
-            document.getElementById('modal-door').classList.remove('hidden');
-        }
-
-        function closeModals() {
-            audio.playClick();
-            document.querySelectorAll('#modal-backdrop > div').forEach(m => m.classList.add('hidden'));
-            document.getElementById('modal-backdrop').classList.add('hidden');
-        }
-
-        function hasOpenModals() {
-            return Array.from(document.querySelectorAll('#modal-backdrop > div')).some(m => !m.classList.contains('hidden'));
-        }
-
-        /* ==================== KEYPAD SYSTEM & PUZZLE SOLVING ==================== */
-        function openKeypadModal(target) {
-            audio.playClick();
-            gameState.activeKeypadTarget = target;
-            gameState.keypadInput = '';
-
-            const titleEl = document.getElementById('keypad-title');
-            if (target === 'drawer') titleEl.innerText = '🧪 서랍 3자리 자물쇠';
-            else if (target === 'safe') titleEl.innerText = '🔐 비밀금고 4자리 번호';
-            else if (target === 'door') titleEl.innerText = '🚪 출구 4자리 키패드';
-
-            updateKeypadDisplay();
-            document.getElementById('modal-keypad').classList.remove('hidden');
-        }
-
-        function closeKeypadModal() {
-            audio.playClick();
-            document.getElementById('modal-keypad').classList.add('hidden');
-        }
-
-        function pressKey(num) {
-            audio.playClick();
-            const maxLen = gameState.activeKeypadTarget === 'drawer' ? 3 : 4;
-            if (gameState.keypadInput.length < maxLen) {
-                gameState.keypadInput += num;
-                updateKeypadDisplay();
-            }
-        }
-
-        function clearKeypad() {
-            audio.playClick();
-            gameState.keypadInput = '';
-            updateKeypadDisplay();
-        }
-
-        function updateKeypadDisplay() {
-            const maxLen = gameState.activeKeypadTarget === 'drawer' ? 3 : 4;
-            const display = gameState.keypadInput.padEnd(maxLen, '-');
-            document.getElementById('keypad-display').innerText = display;
-        }
-
-        function submitKeypad() {
-            const code = gameState.keypadInput;
-            const target = gameState.activeKeypadTarget;
-
-            if (target === 'drawer') {
-                if (code === '472') {
-                    audio.playUnlock();
-                    gameState.workbenchUnlocked = true;
-                    showToast('🎉 서랍 자물쇠 해제! 체스 카드와 열쇠를 얻었습니다.');
-                    addItemToInventory('chess_card');
-                    addItemToInventory('small_key');
-                    closeKeypadModal();
-                    openWorkbenchModal(); // Refresh modal view
-                } else {
-                    triggerErrorKeypad();
-                }
-            } else if (target === 'safe') {
-                if (code === '8352') {
-                    audio.playUnlock();
-                    gameState.safeUnlocked = true;
-                    showToast('🎉 금고가 열렸습니다! UV 랜턴을 발견했습니다.');
-                    addItemToInventory('uv_lantern');
-                    document.getElementById('safe-led').setAttribute('fill', '#22c55e');
-                    closeKeypadModal();
-                    openChessSafeModal(); // Refresh modal view
-                } else {
-                    triggerErrorKeypad();
-                }
-            } else if (target === 'door') {
-                if (code === '7014') {
-                    audio.playUnlock();
-                    gameState.doorUnlocked = true;
-                    document.getElementById('door-lock-led').setAttribute('fill', '#22c55e');
-                    closeKeypadModal();
-                    triggerVictory();
-                } else {
-                    triggerErrorKeypad();
-                }
-            }
-        }
-
-        function triggerErrorKeypad() {
-            audio.playError();
-            showToast('❌ 잘못된 암호입니다!');
-            const disp = document.getElementById('keypad-display');
-            disp.classList.add('text-red-500');
-            setTimeout(() => {
-                disp.classList.remove('text-red-500');
-                gameState.keypadInput = '';
-                updateKeypadDisplay();
-            }, 600);
-        }
-
-        /* ==================== TOAST & HINTS ==================== */
-        function showToast(msg) {
-            const toast = document.getElementById('toast-banner');
-            document.getElementById('toast-message').innerText = msg;
-            toast.classList.remove('-translate-y-12', 'opacity-0');
-            toast.classList.add('translate-y-2', 'opacity-100');
-
-            setTimeout(() => {
-                toast.classList.remove('translate-y-2', 'opacity-100');
-                toast.classList.add('-translate-y-12', 'opacity-0');
-            }, 2800);
-        }
-
-        function openHintModal() {
-            audio.playClick();
-            const listEl = document.getElementById('hint-content-list');
-            listEl.innerHTML = '';
-
-            let hintsToShow = [];
-
-            if (!gameState.workbenchUnlocked) {
-                hintsToShow.push("<strong>[1단계] 실험대 서랍:</strong> 노트의 빛의 3원색 파장 순서(Red ➔ Green ➔ Blue)로 시약병 숫자를 조합하세요. (Red=4, Green=7, Blue=2)");
-            } else if (!gameState.safeUnlocked) {
-                hintsToShow.push("<strong>[2단계] 체스 금고:</strong> 체스 기물 카드(B, K, N, R)에서 알파벳 순서(Bishop ➔ King ➔ Knight ➔ Rook)대로 행(숫자) 좌표를 나열하세요.");
-                hintsToShow.push("좌표 예시: Bishop(A8)=8, King(D3)=3, Knight(F5)=5, Rook(C2)=2 ➔ 정답: 8352");
-            } else if (!gameState.chartDiscovered) {
-                hintsToShow.push("<strong>[3단계] 연금술 기호표:</strong> 인벤토리에서 'UV 랜턴'을 선택한 후, 우측 기호표를 다시 확인해보세요!");
-            } else {
-                hintsToShow.push("<strong>[4단계] 탈출구 키패드:</strong> UV 빛으로 드러난 단어 'GOLD'의 글자를 기호표 범례 숫자에 대입하세요. (G=7, O=0, L=1, D=4 ➔ 정답: 7014)");
-            }
-
-            hintsToShow.forEach((h, idx) => {
-                const item = document.createElement('div');
-                item.className = 'p-2.5 bg-stone-900 border border-amber-800/60 rounded-lg text-amber-200';
-                item.innerHTML = h;
-                listEl.appendChild(item);
-            });
-
-            if (gameState.hintsLeft > 0) {
-                gameState.hintsLeft--;
-                gameState.hintsUsedCount++;
-                document.getElementById('hint-count').innerText = gameState.hintsLeft;
-            }
-
-            document.getElementById('modal-backdrop').classList.remove('hidden');
-            document.getElementById('modal-hint').classList.remove('hidden');
-        }
-
-        /* ==================== SOUND & RESET & VICTORY ==================== */
-        function toggleSound() {
-            audio.muted = !audio.muted;
-            const btn = document.getElementById('btn-sound');
-            btn.innerText = audio.muted ? '🔇' : '🔊';
-            if (!audio.muted) audio.playClick();
-        }
-
-        function confirmReset() {
-            if (confirm('게임 상태를 초기화하고 처음부터 다시 시작하시겠습니까?')) {
-                resetGame();
-            }
+        function updateMineCountDisplay() {
+            let remaining = totalMines - flaggedCount;
+            mineCountEl.textContent = (remaining < 0 ? '-' : '') + String(Math.abs(remaining)).padStart(2, '0');
         }
 
         function resetGame() {
-            gameState.timerSeconds = 1200;
-            gameState.inventory = [];
-            gameState.selectedItemId = null;
-            gameState.hintsLeft = 3;
-            gameState.hintsUsedCount = 0;
-            gameState.workbenchUnlocked = false;
-            gameState.safeUnlocked = false;
-            gameState.chartDiscovered = false;
-            gameState.doorUnlocked = false;
-
-            document.getElementById('hint-count').innerText = '3';
-            document.getElementById('door-lock-led').setAttribute('fill', '#ef4444');
-            document.getElementById('safe-led').setAttribute('fill', '#ef4444');
-
-            closeModals();
-            renderInventory();
-            startTimer();
-            showToast('🔄 게임이 초기화되었습니다.');
+            closeModal();
+            initGame();
         }
 
-        function triggerVictory() {
-            clearInterval(gameState.timerInterval);
-            audio.playFanfare();
-
-            const timeUsed = 1200 - gameState.timerSeconds;
-            const mLeft = Math.floor(gameState.timerSeconds / 60).toString().padStart(2, '0');
-            const sLeft = (gameState.timerSeconds % 60).toString().padStart(2, '0');
-
-            document.getElementById('final-time-left').innerText = `${mLeft}:${sLeft}`;
-            document.getElementById('final-hints-used').innerText = `${gameState.hintsUsedCount}개`;
-
-            let rank = 'S CLASS';
-            if (timeUsed > 600 || gameState.hintsUsedCount > 2) rank = 'A CLASS';
-            if (timeUsed > 900) rank = 'B CLASS';
-            document.getElementById('final-rank').innerText = rank;
-
-            document.getElementById('modal-backdrop').classList.remove('hidden');
-            document.getElementById('modal-victory').classList.remove('hidden');
-
-            startConfetti();
+        function toggleFlagMode() {
+            flagModeActive = !flagModeActive;
+            if (flagModeActive) {
+                flagModeBtnEl.className = "ml-1 px-2.5 py-1 text-xs font-bold rounded-lg bg-blue-600 hover:bg-blue-500 transition-all text-white shadow";
+                flagModeBtnEl.textContent = "토글 끄기";
+                flagModeStatusEl.className = "text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-semibold";
+                flagModeStatusEl.textContent = "켜짐 (클릭=깃발)";
+            } else {
+                flagModeBtnEl.className = "ml-1 px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-600 hover:bg-slate-500 transition-all text-white";
+                flagModeBtnEl.textContent = "토글 켜기";
+                flagModeStatusEl.className = "text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-slate-600 text-slate-300";
+                flagModeStatusEl.textContent = "끄기";
+            }
         }
 
-        /* Confetti Effect for Victory */
-        function startConfetti() {
-            const canvas = document.getElementById('confetti-canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
-
-            const particles = [];
-            for (let i = 0; i < 60; i++) {
-                particles.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height - canvas.height,
-                    size: Math.random() * 6 + 3,
-                    color: ['#f59e0b', '#d97706', '#3b82f6', '#a855f7', '#22c55e'][Math.floor(Math.random() * 5)],
-                    speed: Math.random() * 3 + 2
-                });
+        function loadBestTime() {
+            let bestTimes = JSON.parse(localStorage.getItem('minesweeper_best_times')) || {};
+            let best = bestTimes[currentDifficulty];
+            if (best !== undefined) {
+                bestTimeEl.textContent = `${best} 초`;
+            } else {
+                bestTimeEl.textContent = '-- 초';
             }
+        }
 
-            function render() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                particles.forEach(p => {
-                    ctx.fillStyle = p.color;
-                    ctx.fillRect(p.x, p.y, p.size, p.size);
-                    p.y += p.speed;
-                    if (p.y > canvas.height) p.y = -10;
-                });
-                requestAnimationFrame(render);
+        function saveBestTime() {
+            let bestTimes = JSON.parse(localStorage.getItem('minesweeper_best_times')) || {};
+            let currentBest = bestTimes[currentDifficulty];
+            if (currentBest === undefined || timeElapsed < currentBest) {
+                bestTimes[currentDifficulty] = timeElapsed;
+                localStorage.setItem('minesweeper_best_times', JSON.stringify(bestTimes));
+                loadBestTime();
             }
-            render();
+        }
+
+        function showModal(isWin) {
+            if (isWin) {
+                modalIconEl.textContent = '🎉';
+                modalTitleEl.textContent = '게임 승리!';
+                modalDescEl.textContent = `축하합니다! ${timeElapsed}초 만에 모든 지뢰를 찾았습니다.`;
+            } else {
+                modalIconEl.textContent = '💥';
+                modalTitleEl.textContent = '게임 오버';
+                modalDescEl.textContent = '지뢰를 밟았습니다. 다시 도전해보세요!';
+            }
+            modalEl.classList.remove('hidden');
+            modalEl.classList.add('flex');
+        }
+
+        function closeModal() {
+            modalEl.classList.remove('flex');
+            modalEl.classList.add('hidden');
         }
     </script>
 </body>
