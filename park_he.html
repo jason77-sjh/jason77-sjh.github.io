@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>학교 탈출: 비밀 동아리실의 보물</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Gowun Dodum', sans-serif;
+            user-select: none;
+        }
+        .title-font {
+            font-family: 'Jua', sans-serif;
+        }
+        .chalkboard {
+            background-color: #2b4c3f;
+            border: 12px solid #8d5524;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            color: #f8fafc;
+        }
+        .pixel-corners {
+            border-radius: 12px;
+        }
+        /* Interactive pulse */
+        @keyframes subtle-pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.85; transform: scale(1.02); }
+        }
+        .interactable {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .interactable:hover {
+            filter: brightness(1.15);
+            transform: translateY(-2px);
+        }
+        .inventory-item.selected {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-800 h-screen w-screen overflow-hidden flex flex-col justify-between">
+
+    <!-- Top Header / Navigation Bar -->
+    <header class="bg-amber-100 border-b-4 border-amber-300 px-4 py-2 flex justify-between items-center z-10 shadow-md">
+        <div class="flex items-center gap-3">
+            <span class="text-2xl">🏫</span>
+            <h1 class="title-font text-xl md:text-2xl text-amber-900">비밀 동아리실 탈출</h1>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="openNotebook()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold px-3 py-1.5 rounded-lg text-sm flex items-center gap-1 transition shadow">
+                <i class="fas fa-book"></i> <span class="hidden sm:inline">탐정 수첩</span>
+            </button>
+            <button onclick="toggleHint()" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold px-3 py-1.5 rounded-lg text-sm flex items-center gap-1 transition shadow">
+                <i class="fas fa-lightbulb"></i> <span class="hidden sm:inline">힌트</span>
+            </button>
+            <button onclick="resetGamePrompt()" class="bg-rose-500 hover:bg-rose-600 text-white font-bold px-3 py-1.5 rounded-lg text-sm flex items-center gap-1 transition shadow">
+                <i class="fas fa-undo"></i> <span class="hidden sm:inline">리셋</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Game Viewport -->
+    <main class="relative flex-1 flex justify-center items-center p-2 md:p-4 overflow-hidden">
+        
+        <!-- Background Scene Container -->
+        <div id="game-scene" class="relative w-full max-w-4xl h-full max-h-[600px] bg-amber-50 rounded-2xl border-4 border-amber-800 shadow-2xl overflow-hidden flex flex-col">
+            
+            <!-- View Navigation Tabs -->
+            <div class="bg-amber-800 text-amber-100 flex justify-around p-1 text-xs sm:text-sm font-bold z-10">
+                <button onclick="switchView('blackboard')" id="tab-blackboard" class="flex-1 py-1.5 rounded-t-lg transition bg-amber-700">1. 칠판 & 교탁</button>
+                <button onclick="switchView('lockers')" id="tab-lockers" class="flex-1 py-1.5 rounded-t-lg transition">2. 사물함 & 창가</button>
+                <button onclick="switchView('bookshelf')" id="tab-bookshelf" class="flex-1 py-1.5 rounded-t-lg transition">3. 책장 & 게시판</button>
+                <button onclick="switchView('safe')" id="tab-safe" class="flex-1 py-1.5 rounded-t-lg transition">4. 비밀 금고 & 탈출문</button>
+            </div>
+
+            <!-- View 1: Blackboard Area -->
+            <div id="view-blackboard" class="view-panel relative w-full h-full p-4 flex flex-col items-center justify-between bg-amber-100/60">
+                <!-- Chalkboard -->
+                <div class="chalkboard w-full h-48 md:h-56 rounded-xl p-4 relative flex flex-col justify-between shadow-lg">
+                    <div class="text-xs text-emerald-300 font-mono">2026학년도 방과 후 추리 동아리 졸업 시험</div>
+                    <div class="text-center text-sm md:text-base leading-relaxed text-slate-100">
+                        <p class="mb-2">"진실은 숫자 뒤에 숨겨져 있다."</p>
+                        <p class="text-xs md:text-sm text-yellow-200">
+                            암호식: <span class="font-bold underline tracking-widest text-amber-300">[ A × B ] - C = 비밀번호</span>
+                        </p>
+                        <p class="text-xs text-slate-300 mt-2">※ A: 사물함 별자리 수 | B: 책장 색상별 책 수 | C: 삼각비 결과값</p>
+                    </div>
+                    <div class="flex justify-between items-end text-xs text-slate-400">
+                        <span>● 분필 지우개 뒤를 주의 깊게 살펴볼 것</span>
+                        <span id="chalk-eraser" onclick="examineEraser()" class="interactable bg-amber-900/80 hover:bg-amber-800 text-amber-200 px-2 py-1 rounded border border-amber-600">지우개 확인</span>
+                    </div>
+                </div>
+
+                <!-- Teacher Desk -->
+                <div class="w-full flex-1 mt-4 bg-amber-800/20 rounded-xl p-3 border-2 border-amber-700/30 flex justify-around items-center relative">
+                    <div onclick="examineTeacherDesk()" class="interactable bg-amber-700 text-white p-3 rounded-lg flex flex-col items-center shadow-md border border-amber-600">
+                        <i class="fas fa-file-signature text-2xl mb-1 text-yellow-300"></i>
+                        <span class="text-xs font-bold">교탁 위 서류</span>
+                    </div>
+                    
+                    <div onclick="examineLaptop()" class="interactable bg-slate-800 text-slate-100 p-3 rounded-lg flex flex-col items-center shadow-md border border-slate-600">
+                        <i class="fas fa-laptop text-2xl mb-1 text-cyan-400"></i>
+                        <span class="text-xs font-bold">교사 노트북</span>
+                    </div>
+
+                    <div onclick="examineGlobe()" class="interactable bg-emerald-700 text-white p-3 rounded-lg flex flex-col items-center shadow-md border border-emerald-600">
+                        <i class="fas fa-globe text-2xl mb-1 text-emerald-300"></i>
+                        <span class="text-xs font-bold">지구본</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View 2: Lockers Area -->
+            <div id="view-lockers" class="view-panel hidden relative w-full h-full p-4 flex flex-col justify-between bg-amber-100/60">
+                <div class="text-xs font-bold text-amber-900 mb-2">학생 사물함 구역 (별자리 암호 열쇠 필요)</div>
+                
+                <!-- Locker Grid -->
+                <div class="grid grid-cols-3 gap-3 flex-1">
+                    <!-- Locker 1 -->
+                    <div onclick="openLocker(1)" class="interactable bg-amber-200 border-2 border-amber-600 rounded-lg p-2 flex flex-col justify-between items-center shadow">
+                        <span class="text-xs font-bold text-amber-900">1호 (카시오페아)</span>
+                        <i class="fas fa-star text-amber-500 text-xl"></i>
+                        <span class="text-[10px] text-amber-800">★ ★ ★ ★ ★</span>
+                    </div>
+                    <!-- Locker 2 -->
+                    <div onclick="openLocker(2)" class="interactable bg-amber-200 border-2 border-amber-600 rounded-lg p-2 flex flex-col justify-between items-center shadow">
+                        <span class="text-xs font-bold text-amber-900">2호 (북두칠성)</span>
+                        <i class="fas fa-moon text-amber-500 text-xl"></i>
+                        <span class="text-[10px] text-amber-800">★ × 7</span>
+                    </div>
+                    <!-- Locker 3 (Locked) -->
+                    <div onclick="openLocker(3)" class="interactable bg-amber-300 border-2 border-amber-700 rounded-lg p-2 flex flex-col justify-between items-center shadow relative">
+                        <span class="text-xs font-bold text-amber-900">3호 (비밀 자물쇠)</span>
+                        <i id="locker-3-icon" class="fas fa-lock text-rose-600 text-2xl my-1"></i>
+                        <span class="text-[10px] text-amber-900 font-bold">4자리 번호키</span>
+                    </div>
+                </div>
+
+                <!-- Window Side Window -->
+                <div class="mt-3 bg-sky-100 border-2 border-sky-300 rounded-xl p-3 flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-sun text-amber-500 text-2xl"></i>
+                        <span class="text-xs text-sky-900 font-bold">창가 화분 뒤편</span>
+                    </div>
+                    <button onclick="examinePlant()" class="interactable bg-emerald-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold shadow">화분 조사</button>
+                </div>
+            </div>
+
+            <!-- View 3: Bookshelf & Board -->
+            <div id="view-bookshelf" class="view-panel hidden relative w-full h-full p-4 flex flex-col justify-between bg-amber-100/60">
+                <!-- Bookshelf -->
+                <div class="bg-amber-900 border-4 border-amber-950 rounded-xl p-3 text-amber-100 shadow-xl">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs font-bold text-amber-300">📚 동아리 참고 서적 컬렉션</span>
+                        <span class="text-[10px] text-amber-200">책 권수를 유심히 세어보자!</span>
+                    </div>
+                    <!-- Books Shelf Rows -->
+                    <div class="bg-amber-950 p-2 rounded-lg flex flex-col gap-2">
+                        <div class="flex items-center gap-1 bg-amber-900/60 p-1 rounded border border-amber-800">
+                            <span class="text-xs w-16 text-rose-300 font-bold">빨간책:</span>
+                            <div class="flex gap-1">
+                                <span class="w-3 h-6 bg-rose-500 rounded-sm inline-block"></span>
+                                <span class="w-3 h-6 bg-rose-500 rounded-sm inline-block"></span>
+                                <span class="w-3 h-6 bg-rose-500 rounded-sm inline-block"></span>
+                                <span class="w-3 h-6 bg-rose-500 rounded-sm inline-block"></span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1 bg-amber-900/60 p-1 rounded border border-amber-800">
+                            <span class="text-xs w-16 text-blue-300 font-bold">파란책:</span>
+                            <div class="flex gap-1">
+                                <span class="w-3 h-6 bg-blue-500 rounded-sm inline-block"></span>
+                                <span class="w-3 h-6 bg-blue-500 rounded-sm inline-block"></span>
+                                <span class="w-3 h-6 bg-blue-500 rounded-sm inline-block"></span>
+                                <span class="w-3 h-6 bg-blue-500 rounded-sm inline-block"></span>
+                                <span class="w-3 h-6 bg-blue-500 rounded-sm inline-block"></span>
+                                <span class="w-3 h-6 bg-blue-500 rounded-sm inline-block"></span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1 bg-amber-900/60 p-1 rounded border border-amber-800">
+                            <span class="text-xs w-16 text-emerald-300 font-bold">초록책:</span>
+                            <div class="flex gap-1">
+                                <span class="w-3 h-6 bg-emerald-500 rounded-sm inline-block"></span>
+                                <span class="w-3 h-6 bg-emerald-500 rounded-sm inline-block"></span>
+                                <span class="w-3 h-6 bg-emerald-500 rounded-sm inline-block"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bulletin Board -->
+                <div class="mt-3 bg-amber-200 border-2 border-amber-500 rounded-xl p-3 flex justify-between items-center shadow">
+                    <div>
+                        <span class="text-xs font-bold text-amber-900 block">📌 알림판 메모</span>
+                        <span class="text-[11px] text-amber-800">"수학 삼각비공식: sin(30°) = 0.5, cos(60°) = 0.5, tan(45°) = 1"</span>
+                    </div>
+                    <button onclick="examineBoard()" class="interactable bg-amber-700 text-white text-xs px-3 py-1.5 rounded-lg font-bold shadow">자세히 보기</button>
+                </div>
+            </div>
+
+            <!-- View 4: Safe & Escape Door -->
+            <div id="view-safe" class="view-panel hidden relative w-full h-full p-4 flex flex-col justify-around items-center bg-amber-100/60">
+                <div class="text-center">
+                    <h3 class="title-font text-lg text-amber-900 mb-1">🔐 비밀 보물 금고 & 탈출문</h3>
+                    <p class="text-xs text-amber-800">모든 단서를 조합하여 최종 비밀번호를 입력하고 열쇠를 얻으세요!</p>
+                </div>
+
+                <div class="flex gap-6 items-center">
+                    <!-- Safe -->
+                    <div onclick="openSafeModal()" class="interactable bg-slate-700 border-4 border-slate-900 p-4 rounded-2xl flex flex-col items-center text-slate-100 shadow-2xl w-36 sm:w-44">
+                        <i id="safe-icon" class="fas fa-vault text-4xl text-amber-400 mb-2"></i>
+                        <span class="text-xs font-bold">비밀 금고</span>
+                        <span id="safe-status" class="text-[10px] text-rose-400 mt-1">잠김</span>
+                    </div>
+
+                    <!-- Exit Door -->
+                    <div onclick="tryEscape()" class="interactable bg-amber-800 border-4 border-amber-950 p-4 rounded-2xl flex flex-col items-center text-amber-100 shadow-2xl w-36 sm:w-44">
+                        <i id="door-icon" class="fas fa-door-closed text-4xl text-yellow-500 mb-2"></i>
+                        <span class="text-xs font-bold">교실 탈출문</span>
+                        <span id="door-status" class="text-[10px] text-rose-300 mt-1">열쇠 필요</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Bottom Inventory Bar & Dialogue Text -->
+    <footer class="bg-amber-950 text-amber-100 border-t-4 border-amber-700 p-3 z-10 flex flex-col md:flex-row gap-3 items-center justify-between">
+        <!-- Text Box / Dialogue Display -->
+        <div class="w-full md:w-1/2 bg-amber-900/80 border border-amber-700 rounded-xl p-2.5 min-h-[50px] flex items-center">
+            <p id="dialogue-text" class="text-xs sm:text-sm leading-snug text-amber-100">
+                방과 후 교실에 갇혔습니다! 방과 후 비밀 보물상자와 졸업 시험 전설을 풀어 탈출하세요.
+            </p>
+        </div>
+
+        <!-- Inventory List -->
+        <div class="w-full md:w-1/2 flex items-center gap-2 overflow-x-auto pb-1 md:pb-0">
+            <span class="text-xs font-bold text-amber-400 whitespace-nowrap">🎒 소지품:</span>
+            <div id="inventory-slots" class="flex gap-2 min-h-[44px]">
+                <!-- Inventory Items added dynamically -->
+                <div class="text-xs text-amber-500 italic py-2">획득한 아이템이 없습니다.</div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modals Overlay -->
+    <div id="modal-overlay" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex justify-center items-center p-4">
+        
+        <!-- Generic Interactive Modal -->
+        <div id="generic-modal" class="hidden bg-white border-4 border-amber-600 rounded-2xl p-5 max-w-md w-full shadow-2xl relative">
+            <button onclick="closeModal()" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 font-bold text-xl">&times;</button>
+            <h3 id="modal-title" class="title-font text-xl text-amber-900 mb-3 border-b pb-1">제목</h3>
+            <div id="modal-body" class="text-sm text-slate-700 space-y-3 max-h-80 overflow-y-auto">
+                <!-- Content injected via JS -->
+            </div>
+            <div id="modal-footer" class="mt-4 flex justify-end gap-2">
+                <button onclick="closeModal()" class="bg-amber-600 text-white font-bold px-4 py-1.5 rounded-lg text-sm hover:bg-amber-700">확인</button>
+            </div>
+        </div>
+
+        <!-- Keypad Lock Modal -->
+        <div id="keypad-modal" class="hidden bg-slate-800 border-4 border-slate-600 rounded-2xl p-5 max-w-xs w-full shadow-2xl text-slate-100">
+            <div class="flex justify-between items-center mb-3">
+                <h3 id="keypad-title" class="title-font text-lg text-amber-400">비밀번호 입력</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-200 text-xl font-bold">&times;</button>
+            </div>
+            
+            <!-- Screen Display -->
+            <div class="bg-slate-950 p-3 rounded-lg border border-slate-700 mb-4 text-center">
+                <span id="keypad-display" class="font-mono text-2xl tracking-widest text-emerald-400 font-bold">----</span>
+            </div>
+
+            <!-- Keypad Grid -->
+            <div class="grid grid-cols-3 gap-2 text-center font-bold text-lg mb-3">
+                <button onclick="pressKey('1')" class="bg-slate-700 hover:bg-slate-600 py-2 rounded-lg shadow active:bg-slate-500">1</button>
+                <button onclick="pressKey('2')" class="bg-slate-700 hover:bg-slate-600 py-2 rounded-lg shadow active:bg-slate-500">2</button>
+                <button onclick="pressKey('3')" class="bg-slate-700 hover:bg-slate-600 py-2 rounded-lg shadow active:bg-slate-500">3</button>
+                <button onclick="pressKey('4')" class="bg-slate-700 hover:bg-slate-600 py-2 rounded-lg shadow active:bg-slate-500">4</button>
+                <button onclick="pressKey('5')" class="bg-slate-700 hover:bg-slate-600 py-2 rounded-lg shadow active:bg-slate-500">5</button>
+                <button onclick="pressKey('6')" class="bg-slate-700 hover:bg-slate-600 py-2 rounded-lg shadow active:bg-slate-500">6</button>
+                <button onclick="pressKey('7')" class="bg-slate-700 hover:bg-slate-600 py-2 rounded-lg shadow active:bg-slate-500">7</button>
+                <button onclick="pressKey('8')" class="bg-slate-700 hover:bg-slate-600 py-2 rounded-lg shadow active:bg-slate-500">8</button>
+                <button onclick="pressKey('9')" class="bg-slate-700 hover:bg-slate-600 py-2 rounded-lg shadow active:bg-slate-500">9</button>
+                <button onclick="clearKeypad()" class="bg-rose-700 hover:bg-rose-600 py-2 rounded-lg text-xs flex items-center justify-center">지우기</button>
+                <button onclick="pressKey('0')" class="bg-slate-700 hover:bg-slate-600 py-2 rounded-lg shadow active:bg-slate-500">0</button>
+                <button onclick="submitKeypad()" class="bg-emerald-600 hover:bg-emerald-500 py-2 rounded-lg text-xs flex items-center justify-center font-bold">확인</button>
+            </div>
+        </div>
+
+        <!-- Notebook Modal -->
+        <div id="notebook-modal" class="hidden bg-amber-50 border-4 border-amber-700 rounded-2xl p-5 max-w-md w-full shadow-2xl relative">
+            <button onclick="closeModal()" class="absolute top-3 right-3 text-amber-800 hover:text-amber-950 font-bold text-xl">&times;</button>
+            <h3 class="title-font text-xl text-amber-900 mb-2 border-b-2 border-amber-300 pb-1 flex items-center gap-2">
+                <i class="fas fa-book-open"></i> 탐정 수첩 (자동 단서 수집)
+            </h3>
+            <div id="notebook-list" class="space-y-2 text-xs text-amber-950 max-h-64 overflow-y-auto p-1">
+                <div class="text-slate-400 italic">아직 기록된 단서가 없습니다. 교실 구석구석을 조사하세요!</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Game State Variables
+        const gameState = {
+            inventory: [],
+            selectedItem: null,
+            clues: [],
+            locker3Unlocked: false,
+            safeUnlocked: false,
+            doorUnlocked: false,
+            eraserExamined: false,
+            keypadTarget: null, // 'locker' or 'safe'
+            keypadInput: '',
+            hintStep: 0
+        };
+
+        // Puzzle Constants & Answers
+        // A = 12 (카시오페아 5개 + 북두칠성 7개)
+        // B = 15 (책: 빨강 4 + 파랑 6 + 초록 3 = 13? 아니, 4*6*? 세어보자: 빨강4, 파랑6, 초록3, 총13 -> Formula specifies (A * B) - C)
+        // Let's refine values precisely:
+        // A (사물함 별자리 총합): 카시오페아(5) + 북두칠성(7) = 12
+        // B (책장 총 책 수): 빨강(4) + 파랑(6) + 초록(3) = 13
+        // C (삼각비 sin(30°)): 0.5 -> C is scaled or integer: sin(30°)*10 = 5
+        // Safe Code = (12 * 13) - 5 = 156 - 5 = 151
+        // Locker 3 Code = 2026 (Year on blackboard)
+        const LOCKER_CODE = "2026";
+        const SAFE_CODE = "151";
+
+        // Initialize Game
+        window.onload = function() {
+            updateDialogue("방과 후 교실에 갇혔습니다! 교실 내 단서들을 모아 졸업 시험의 비밀번호를 알아내고 탈출하세요.");
+        };
+
+        // View Switching
+        function switchView(viewName) {
+            document.querySelectorAll('.view-panel').forEach(panel => panel.classList.add('hidden'));
+            document.getElementById(`view-${viewName}`).classList.remove('hidden');
+
+            document.querySelectorAll('[id^="tab-"]').forEach(tab => {
+                tab.classList.remove('bg-amber-700');
+                tab.classList.add('bg-amber-800');
+            });
+            document.getElementById(`tab-${viewName}`).classList.remove('bg-amber-800');
+            document.getElementById(`tab-${viewName}`).classList.add('bg-amber-700');
+        }
+
+        // Dialogue Helper
+        function updateDialogue(text) {
+            document.getElementById('dialogue-text').innerText = text;
+        }
+
+        // Add Clue to Notebook
+        function addClue(title, description) {
+            if (!gameState.clues.some(c => c.title === title)) {
+                gameState.clues.push({ title, description });
+                updateNotebookUI();
+            }
+        }
+
+        function updateNotebookUI() {
+            const list = document.getElementById('notebook-list');
+            if (gameState.clues.length === 0) {
+                list.innerHTML = `<div class="text-slate-400 italic">아직 기록된 단서가 없습니다. 교실 구석구석을 조사하세요!</div>`;
+                return;
+            }
+            list.innerHTML = gameState.clues.map(clue => `
+                <div class="bg-amber-100 p-2 rounded-lg border border-amber-300">
+                    <strong class="text-amber-900 block text-xs">📌 ${clue.title}</strong>
+                    <span class="text-[11px] text-amber-800">${clue.description}</span>
+                </div>
+            `).join('');
+        }
+
+        // Inventory System
+        function addItem(id, name, icon) {
+            if (!gameState.inventory.some(item => item.id === id)) {
+                gameState.inventory.push({ id, name, icon });
+                updateInventoryUI();
+                updateDialogue(`[아이템 획득] ${name}을(를) 주웠습니다!`);
+            }
+        }
+
+        function updateInventoryUI() {
+            const container = document.getElementById('inventory-slots');
+            if (gameState.inventory.length === 0) {
+                container.innerHTML = `<div class="text-xs text-amber-500 italic py-2">획득한 아이템이 없습니다.</div>`;
+                return;
+            }
+            container.innerHTML = gameState.inventory.map(item => `
+                <div onclick="selectItem('${item.id}')" class="inventory-item ${gameState.selectedItem === item.id ? 'selected' : ''} bg-amber-800 border-2 border-amber-600 hover:border-amber-400 rounded-lg p-1.5 flex items-center gap-1.5 cursor-pointer transition">
+                    <i class="${item.icon} text-amber-300 text-base"></i>
+                    <span class="text-xs text-amber-100 font-bold whitespace-nowrap">${item.name}</span>
+                </div>
+            `).join('');
+        }
+
+        function selectItem(id) {
+            if (gameState.selectedItem === id) {
+                gameState.selectedItem = null;
+            } else {
+                gameState.selectedItem = id;
+            }
+            updateInventoryUI();
+        }
+
+        // Interactions Logic
+        function examineEraser() {
+            gameState.eraserExamined = true;
+            addClue("분필 지우개 뒤 메모", "지우개 뒤에 세밀하게 쓰여진 글씨: '삼각비 C의 값은 sin(30°)에 10을 곱한 정수값이다. (sin(30°) = 0.5 -> C = 5)'");
+            openGenericModal("분필 지우개 조사", "<p>지우개를 뒤집어보니 미세한 숫자가 적혀있습니다!</p><p class='font-bold text-indigo-600 mt-2'>'C = sin(30°) × 10 = 5'</p>");
+            updateDialogue("지우개 뒤에서 중요한 수학 힌트 C의 값을 찾았습니다!");
+        }
+
+        function examineTeacherDesk() {
+            addClue("교탁 유인물", "2026학년도 입학 연도가 강조된 시험 안내문이 놓여 있습니다.");
+            openGenericModal("교탁 위 서류", "<p>동아리 졸업 시험 안내문이 놓여있습니다.</p><p class='mt-2 text-slate-600'>'올해 <strong>2026년</strong> 신입생 및 졸업생 여러분, 사물함의 3호 칸은 학교의 개교 연도이자 올해 연도로 잠겨 있습니다.'</p>");
+            updateDialogue("교탁 서류에서 사물함 자물쇠의 연도 암호(2026)를 발견했습니다.");
+        }
+
+        function examineLaptop() {
+            openGenericModal("교사 노트북", "<p>노트북 화면에 암호 단서가 띄워져 있습니다.</p><p class='mt-2 font-bold text-amber-800 bg-amber-100 p-2 rounded'>'값 A는 사물함 1호와 2호에 새겨진 별자리 별 개수의 총합이다.'</p>");
+            addClue("노트북 단서", "A = 카시오페아 별 수(5) + 북두칠성 별 수(7) = 12");
+        }
+
+        function examineGlobe() {
+            openGenericModal("지구본", "<p>지구본 밑바닥을 잘 살펴보니 작은 돋보기가 붙어있습니다!</p>");
+            addItem("magnifier", "돋보기", "fas fa-search");
+        }
+
+        function examinePlant() {
+            openGenericModal("창가 화분", "<p>화분 흙 속에서 작은 열쇠 조각은 아니지만 유용한 메모를 찾았습니다.</p><p class='mt-2 text-emerald-700 font-bold'>'책장에 꽂힌 책의 개수: 빨강(4) + 파랑(6) + 초록(3) = 총 13권 (B = 13)'</p>");
+            addClue("책 수 계산 (B)", "책장의 총 책 개수 B = 13");
+        }
+
+        function examineBoard() {
+            openGenericModal("게시판", "<p>수학 공식이 친절하게 적혀있습니다.</p><p class='mt-2 text-amber-800 font-mono'>sin(30°) = 0.5</p>");
+        }
+
+        function openLocker(id) {
+            if (id === 1) {
+                openGenericModal("사물함 1호", "<p>카시오페아 별자리가 그려져 있습니다. (별 5개)</p>");
+            } else if (id === 2) {
+                openGenericModal("사물함 2호", "<p>북두칠성 별자리가 그려져 있습니다. (별 7개)</p>");
+            } else if (id === 3) {
+                if (gameState.locker3Unlocked) {
+                    openGenericModal("사물함 3호", "<p>사물함 내부가 열려있습니다. 열쇠는 이미 수거했습니다.</p>");
+                } else {
+                    openKeypadModal('locker');
+                }
+            }
+        }
+
+        // Keypad Logic
+        function openKeypadModal(target) {
+            gameState.keypadTarget = target;
+            gameState.keypadInput = '';
+            document.getElementById('keypad-display').innerText = '----';
+            document.getElementById('keypad-title').innerText = target === 'locker' ? "3호 사물함 암호" : "비밀 금고 최종 암호";
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            document.getElementById('keypad-modal').classList.remove('hidden');
+        }
+
+        function pressKey(num) {
+            if (gameState.keypadInput.length < 6) {
+                gameState.keypadInput += num;
+                document.getElementById('keypad-display').innerText = gameState.keypadInput;
+            }
+        }
+
+        function clearKeypad() {
+            gameState.keypadInput = '';
+            document.getElementById('keypad-display').innerText = '----';
+        }
+
+        function submitKeypad() {
+            if (gameState.keypadTarget === 'locker') {
+                if (gameState.keypadInput === LOCKER_CODE) {
+                    gameState.locker3Unlocked = true;
+                    document.getElementById('locker-3-icon').className = "fas fa-lock-open text-emerald-500 text-2xl my-1";
+                    closeModal();
+                    openGenericModal("사물함 3호 해제!", "<p>사물함이 열렸습니다! 내부에서 <strong>'금고 보조 단서'</strong>를 발견했습니다.</p><p class='mt-2 font-bold text-amber-800'>[계산법 재확인]: (A × B) - C</p>");
+                    updateDialogue("사물함 3호를 성공적으로 열었습니다!");
+                } else {
+                    alert("비밀번호가 올바르지 않습니다! (힌트: 입학 연도)");
+                    clearKeypad();
+                }
+            } else if (gameState.keypadTarget === 'safe') {
+                if (gameState.keypadInput === SAFE_CODE) {
+                    gameState.safeUnlocked = true;
+                    document.getElementById('safe-icon').className = "fas fa-vault text-4xl text-emerald-400 mb-2";
+                    document.getElementById('safe-status').innerText = "열림";
+                    document.getElementById('safe-status').className = "text-[10px] text-emerald-400 mt-1";
+                    addItem("exitKey", "교실 열쇠", "fas fa-key");
+                    closeModal();
+                    openGenericModal("🎉 비밀 금고 오픈!", "<p>금고가 열리고 마침내 <strong>교실 열쇠</strong>를 획득했습니다!</p><p class='mt-2 text-indigo-600 font-bold'>탈출문으로 이동하여 열쇠를 사용하세요!</p>");
+                    updateDialogue("비밀 금고를 열고 교실 열쇠를 획득했습니다!");
+                } else {
+                    alert("비밀번호가 일치하지 않습니다! 칠판의 공식 (A × B) - C 를 다시 계산해보세요.");
+                    clearKeypad();
+                }
+            }
+        }
+
+        function openSafeModal() {
+            if (gameState.safeUnlocked) {
+                openGenericModal("비밀 금고", "<p>금고가 이미 열려있습니다!</p>");
+            } else {
+                openKeypadModal('safe');
+            }
+        }
+
+        function tryEscape() {
+            if (gameState.doorUnlocked) {
+                openGenericModal("탈출 완료", "<p>이미 문이 열려 있습니다!</p>");
+                return;
+            }
+
+            if (gameState.selectedItem === 'exitKey') {
+                gameState.doorUnlocked = true;
+                document.getElementById('door-icon').className = "fas fa-door-open text-4xl text-emerald-400 mb-2";
+                document.getElementById('door-status').innerText = "열림 (탈출 가능)";
+                document.getElementById('door-status').className = "text-[10px] text-emerald-400 mt-1";
+                
+                openGenericModal("🏆 탈출 성공!", `
+                    <div class="text-center">
+                        <div class="text-5xl mb-3">🎉🏫✨</div>
+                        <p class="font-bold text-lg text-amber-900">축하합니다! 방과 후 비밀 동아리실을 탈출했습니다!</p>
+                        <p class="text-xs text-slate-600 mt-2">뛰어난 추리력으로 졸업 시험의 모든 암호를 완벽하게 풀어냈습니다.</p>
+                        <button onclick="location.reload()" class="mt-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-sm shadow">다시 플레이하기</button>
+                    </div>
+                `);
+                updateDialogue("축하합니다! 성공적으로 탈출했습니다!");
+            } else {
+                openGenericModal("문이 잠겨있습니다", "<p>열쇠가 필요합니다. 인벤토리에서 '교실 열쇠'를 선택한 후 클릭하세요.</p>");
+                updateDialogue("문이 잠겨있습니다. 열쇠를 선택하고 사용하세요.");
+            }
+        }
+
+        // Generic Modal Helpers
+        function openGenericModal(title, content) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-body').innerHTML = content;
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            document.getElementById('generic-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').classList.add('hidden');
+            document.getElementById('generic-modal').classList.add('hidden');
+            document.getElementById('keypad-modal').classList.add('hidden');
+            document.getElementById('notebook-modal').classList.add('hidden');
+        }
+
+        function openNotebook() {
+            updateNotebookUI();
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            document.getElementById('notebook-modal').classList.remove('hidden');
+        }
+
+        // Hint System
+        function toggleHint() {
+            const hints = [
+                "1. 교탁 서류를 확인하여 올해 연도(2026)로 사물함 3호를 열어보세요.",
+                "2. A의 값: 사물함 1호(별 5개) + 2호(별 7개) = 12 입니다.",
+                "3. B의 값: 책장의 모든 책 권수 (빨강 4 + 파랑 6 + 초록 3 = 13) 입니다.",
+                "4. C의 값: 분필 지우개 뒤를 확인하세요! sin(30°) = 0.5 이므로 × 10 = 5 입니다.",
+                "5. 최종 금고 암호 공식: (12 × 13) - 5 = 156 - 5 = 151 입니다!"
+            ];
+
+            const hintMsg = hints[gameState.hintStep % hints.length];
+            gameState.hintStep++;
+            openGenericModal("💡 탐정 힌트", `<p class="font-bold text-indigo-900">${hintMsg}</p>`);
+        }
+
+        // Reset Game Prompt
+        function resetGamePrompt() {
+            if (confirm("게임을 초기화하고 처음부터 다시 시작하시겠습니까?")) {
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>

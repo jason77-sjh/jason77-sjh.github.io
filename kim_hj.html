@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>연금술사의 비밀 연구실 | 방탈출</title>
+<style>
+:root{--bg:#0c1220;--panel:#151f31;--panel2:#1c2a40;--line:#34455f;--text:#edf5ff;--muted:#a9bad0;--mint:#8be7c1;--gold:#f4d58d;--red:#ff8b8b}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#25384b 0,#0c1220 58%);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.55}
+button,input{font:inherit}button{cursor:pointer;border:1px solid #506582;background:#25354d;color:var(--text);border-radius:10px;padding:10px 13px;transition:.15s}button:hover{filter:brightness(1.16)}button:focus-visible,input:focus-visible{outline:3px solid var(--mint);outline-offset:2px}button.primary{background:#246451;border-color:#4ba98a}button.warn{background:#603b32;border-color:#96604f}button:disabled{opacity:.4;cursor:not-allowed}
+.wrap{max-width:1150px;margin:auto;padding:18px}.hero{padding:24px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(120deg,#24394b,#182238);box-shadow:0 12px 35px #0004}.eyebrow{color:var(--mint);font-weight:800;font-size:.8rem;letter-spacing:.13em}h1{font-size:clamp(1.8rem,4vw,2.7rem);line-height:1.15;margin:6px 0 8px}h2{font-size:1.2rem;margin:0 0 12px}h3{font-size:1rem;margin:0 0 8px}.muted{color:var(--muted)}.toprow{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}.stats{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}.stat{background:#101a2b;border:1px solid var(--line);padding:9px 13px;border-radius:12px;min-width:112px}.stat small{display:block;color:var(--muted)}.stat strong{font-size:1.15rem}.layout{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(270px,.9fr);gap:16px;margin-top:16px}.panel{background:#141e2fef;border:1px solid var(--line);border-radius:17px;padding:18px;min-width:0}.room-banner{min-height:180px;border:1px solid #465b73;border-radius:14px;padding:20px;display:flex;flex-direction:column;justify-content:space-between;background:linear-gradient(145deg,#344b59,#172439 65%,#121a2b);position:relative;overflow:hidden}.room-banner:after{content:"⚗";position:absolute;font-size:9rem;right:20px;bottom:-25px;opacity:.12}.room-name{font-size:1.5rem;font-weight:800;position:relative;z-index:1}.room-desc{max-width:650px;color:#d0deee;position:relative;z-index:1}.room-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.room-tabs button.active{background:#285a4d;border-color:var(--mint);color:#eafff5}.objects{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.object{padding:14px;text-align:left;min-height:95px;background:#1a2940}.object .emoji{font-size:1.6rem;display:block;margin-bottom:3px}.object.selected{border-color:var(--gold);box-shadow:0 0 0 2px #f4d58d30 inset}.object small{display:block;color:var(--muted)}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.boxline{border:1px solid var(--line);background:#101a2a;border-radius:12px;padding:13px;margin-top:12px}.inputrow{display:flex;gap:8px;flex-wrap:wrap}.inputrow input{flex:1;min-width:100px;background:#0b1423;border:1px solid #53657e;color:var(--text);border-radius:9px;padding:11px}.feedback{min-height:52px;color:var(--gold);padding-top:8px}.inventory{display:flex;flex-wrap:wrap;gap:8px}.item{border:1px solid #53657e;background:#1d2a3e;padding:8px 10px;border-radius:10px}.item.active{border-color:var(--gold);background:#473e2a}.item.empty{color:var(--muted);border-style:dashed}.side-section+.side-section{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}.log{max-height:180px;overflow:auto;font-size:.9rem;color:#c4d1e2}.log p{margin:4px 0}.hint-count{color:var(--gold);font-weight:700}.progress{height:8px;background:#09111e;border-radius:20px;overflow:hidden;margin:8px 0 13px}.progress span{display:block;height:100%;background:linear-gradient(90deg,#4a9e82,var(--mint));width:0%;transition:width .25s}.overlay{position:fixed;inset:0;background:#050a12d9;display:none;align-items:center;justify-content:center;padding:18px;z-index:10}.overlay.show{display:flex}.modal{width:min(520px,100%);background:#172438;border:1px solid #526681;border-radius:18px;padding:24px;box-shadow:0 20px 80px #0009}.modal h2{font-size:1.5rem}.modal-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}.ending{font-size:3rem}.small{font-size:.88rem}.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:780px){.layout{grid-template-columns:1fr}.room-banner{min-height:150px}.objects{grid-template-columns:1fr 1fr}.wrap{padding:12px}.hero{padding:19px}}
+@media(max-width:430px){.objects{grid-template-columns:1fr}.stat{flex:1;min-width:90px}.panel{padding:14px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<header class="hero">
+ <div class="toprow"><div><div class="eyebrow">MYSTERY ESCAPE · INTERACTIVE DEMO</div><h1>연금술사의 비밀 연구실</h1><p class="muted">흩어진 단서를 연결하고, 오래된 연구실의 잠긴 출구를 열어라.</p></div><button id="restartTop" aria-label="게임 다시 시작">↻ 다시 시작</button></div>
+ <div class="stats" aria-live="polite">
+  <div class="stat"><small>남은 시간</small><strong id="timer">20:00</strong></div>
+  <div class="stat"><small>힌트</small><strong><span id="hints">3</span> / 3</strong></div>
+  <div class="stat"><small>수집한 아이템</small><strong id="itemCount">0</strong></div>
+  <div class="stat"><small>해결한 퍼즐</small><strong id="puzzleCount">0 / 4</strong></div>
+ </div>
+ <div class="progress" aria-label="퍼즐 진행률"><span id="progress"></span></div>
+</header>
+
+<div class="layout">
+ <section class="panel">
+  <div class="room-banner"><div class="eyebrow">CURRENT LOCATION</div><div class="room-name" id="roomTitle">연구실 중앙</div><div class="room-desc" id="roomDesc">먼지 쌓인 실험대와 오래된 책장이 보인다. 먼저 주변을 조사해 단서를 찾아보자.</div></div>
+  <nav class="room-tabs" aria-label="장소 선택">
+   <button class="active" data-room="lab">⚗ 실험대</button><button data-room="chess">♟ 체스 벽화</button><button data-room="symbols">☼ 기호 서가</button><button data-room="door">🚪 출구 철문</button>
+  </nav>
+  <h2>주변 조사</h2>
+  <div id="objects" class="objects"></div>
+  <div class="boxline" id="puzzleBox">
+   <h3 id="puzzleTitle">실험대의 서랍</h3>
+   <p id="puzzlePrompt" class="muted">시약병에 적힌 숫자를 살펴보고 세 자리 암호를 입력하자.</p>
+   <form id="answerForm" class="inputrow">
+    <label class="sr" for="answer">암호 입력</label><input id="answer" autocomplete="off" inputmode="numeric" placeholder="암호 입력" maxlength="12">
+    <button class="primary" type="submit">확인</button>
+   </form>
+   <div class="actions"><button id="hintBtn">힌트 보기</button><button id="useItemBtn">선택한 아이템 사용</button></div>
+   <div class="feedback" id="feedback" role="status" aria-live="polite">단서를 조사하고 암호를 입력해 보세요.</div>
+  </div>
+ </section>
+
+ <aside class="panel">
+  <div class="side-section">
+   <h2>🎒 소지품 보관함</h2>
+   <p class="muted small">아이템을 선택한 뒤 장소에서 사용해 보세요.</p>
+   <div id="inventory" class="inventory"><span class="item empty">아직 획득한 아이템이 없습니다.</span></div>
+   <p id="selectedLabel" class="muted small">선택한 아이템: 없음</p>
+  </div>
+  <div class="side-section">
+   <h2>📜 연구 기록</h2>
+   <div class="log" id="log" aria-live="polite"><p>연구실에 들어왔습니다. 출구는 잠겨 있습니다.</p></div>
+  </div>
+  <div class="side-section">
+   <h2>🎯 목표</h2>
+   <ol class="small">
+    <li>실험대 서랍의 암호를 풀어 UV 랜턴을 얻는다.</li>
+    <li>체스 벽화의 규칙을 알아내 황동 열쇠를 찾는다.</li>
+    <li>UV 랜턴으로 기호 서가의 숨겨진 숫자를 확인한다.</li>
+    <li>모든 단서를 조합해 출구 암호를 푼다.</li>
+   </ol>
+  </div>
+ </aside>
+</div>
+</main>
+
+<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+ <div class="modal"><div class="ending" id="endingIcon">🔓</div><h2 id="modalTitle">탈출 성공!</h2><p id="modalText"></p><div id="resultDetails" class="boxline"></div><div class="modal-actions"><button class="primary" id="playAgain">다시 도전하기</button><button id="closeModal">결과 보기 닫기</button></div></div>
+</div>
+
+<script>
+(() => {
+ const TOTAL_SECONDS=20*60;
+ const roomInfo={
+  lab:{title:"실험대",desc:"시약병의 숫자와 오래된 서랍이 보인다. 연구 노트의 규칙을 찾아보자."},
+  chess:{title:"체스 벽화",desc:"벽에는 세 개의 체스 기물이 새겨져 있다. 기물의 순서가 열쇠 상자 암호를 알려줄지도 모른다."},
+  symbols:{title:"기호 서가",desc:"책등에는 낯선 연금술 기호가 있다. 일반적인 빛으로는 보이지 않는 표시도 있을 것 같다."},
+  door:{title:"출구 철문",desc:"철문에는 세 자리 숫자 자물쇠와 열쇠 구멍이 있다. 앞서 얻은 정보를 조합해야 한다."}
+ };
+ const objectData={
+  lab:[
+   {id:"vials",icon:"🧪",name:"시약병",desc:"빨강 4 · 초록 7 · 파랑 2. 연구 노트에는 '색의 순서대로 읽어라'라고 적혀 있다.",item:null},
+   {id:"drawer",icon:"🗄️",name:"잠긴 서랍",desc:"세 자리 숫자 암호가 필요하다. 시약병의 색 순서를 적용해 보자.",item:null},
+   {id:"note",icon:"📓",name:"연구 노트",desc:"첫 번째 숫자는 빨강, 두 번째는 초록, 세 번째는 파랑이다. 서랍은 3자리 암호로 잠겨 있다.",item:null}
+  ],
+  chess:[
+   {id:"mural",icon:"♟️",name:"체스 벽화",desc:"벽화 아래 메모: '말의 값은 순서대로 읽는다. 나이트=2, 비숍=4, 룩=6.'",item:null},
+   {id:"chest",icon:"🧰",name:"황동 상자",desc:"두 자리 암호를 입력하면 상자가 열린다. 벽화에 적힌 나이트와 비숍의 값을 순서대로 사용하자.",item:null},
+   {id:"board",icon:"♜",name:"체스판",desc:"나이트와 비숍이 왼쪽부터 놓여 있다. 메모의 값이 열쇠가 될 것 같다.",item:null}
+  ],
+  symbols:[
+   {id:"shelf",icon:"📚",name:"기호가 적힌 책등",desc:"세 개의 기호가 나란히 있다. 어떤 도구를 사용하면 숨은 숫자가 보일 것 같다.",item:null},
+   {id:"lampSpot",icon:"🔦",name:"희미한 벽면",desc:"벽면에 눈에 잘 띄지 않는 흔적이 있다. UV 랜턴으로 비춰 보자.",item:null},
+   {id:"cabinet",icon:"🗝️",name:"작은 서랍장",desc:"서랍장에는 숫자 대신 연금술 기호가 새겨져 있다. UV 랜턴을 사용하면 숫자가 드러날 것 같다.",item:null}
+  ],
+  door:[
+   {id:"lock",icon:"🔢",name:"세 자리 자물쇠",desc:"실험대와 기호 서가에서 얻은 숫자를 조합해야 한다. 순서는 연구 노트의 안내를 참고하자.",item:null},
+   {id:"keyhole",icon:"🗝️",name:"열쇠 구멍",desc:"황동 열쇠가 필요하다. 체스 벽화의 상자를 확인해 보자.",item:null},
+   {id:"inscription",icon:"✍️",name:"문 위의 문구",desc:"'빛으로 숨은 것을 보고, 색의 순서로 진실을 읽어라.'",item:null}
+  ]
+ };
+ const hints={
+  lab:["시약병의 숫자를 빨강, 초록, 파랑 순서로 읽어 보세요.","빨강은 4, 초록은 7, 파랑은 2입니다.","서랍 암호는 472입니다."],
+  chess:["벽화 메모에 나이트=2, 비숍=4라고 적혀 있습니다.","왼쪽에서 오른쪽 순서로 나이트와 비숍의 값을 읽으세요.","상자 암호는 24입니다."],
+  symbols:["기호 서가에서는 먼저 실험대에서 얻는 도구가 필요합니다.","소지품에서 UV 랜턴을 선택한 뒤 '선택한 아이템 사용'을 누르세요.","숨겨진 숫자는 8입니다. 최종 암호에는 이 숫자를 사용합니다."],
+  door:["출구를 열려면 황동 열쇠와 숫자 암호가 모두 필요합니다.","황동 열쇠는 체스 벽화의 상자에서 얻고, 최종 암호는 478입니다.","황동 열쇠를 획득한 뒤 478을 입력하세요."]
+ };
+ let state;
+ let timerId=null;
+ const $=id=>document.getElementById(id);
+ function freshState(){return {room:"lab",selectedObject:"vials",inventory:[],selectedItem:null,hints:3,solved:{lab:false,chess:false,symbols:false,door:false},discovered:{},usedHints:{lab:0,chess:0,symbols:0,door:0},seconds:TOTAL_SECONDS,startedAt:Date.now(),running:true,ended:false,wrong:0,logs:["연구실에 들어왔습니다. 출구는 잠겨 있습니다."]};}
+ function log(msg){state.logs.unshift(msg);state.logs=state.logs.slice(0,18);renderLog();}
+ function renderLog(){$("log").innerHTML=state.logs.map(x=>`<p>• ${escapeHtml(x)}</p>`).join("");}
+ function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+ function currentObjects(){return objectData[state.room];}
+ function renderRoom(){
+  document.querySelectorAll("[data-room]").forEach(b=>b.classList.toggle("active",b.dataset.room===state.room));
+  $("roomTitle").textContent=roomInfo[state.room].title;$("roomDesc").textContent=roomInfo[state.room].desc;
+  $("objects").innerHTML=currentObjects().map(o=>`<button class="object ${state.selectedObject===o.id?"selected":""}" data-object="${o.id}"><span class="emoji">${o.icon}</span><strong>${o.name}</strong><small>${state.discovered[o.id]?"조사 완료 · 다시 보기":"클릭해서 조사하기"}</small></button>`).join("");
+  $("objects").querySelectorAll("[data-object]").forEach(b=>b.addEventListener("click",()=>inspect(b.dataset.object)));
+  updatePuzzlePanel();
+ }
+ function inspect(id){
+  state.selectedObject=id;const o=currentObjects().find(x=>x.id===id);state.discovered[id]=true;
+  $("feedback").textContent=o.desc;log(`${o.name} 조사: ${o.desc}`);
+  if(id==="vials")$("answer").focus();
+  renderRoom();
+  $("feedback").textContent=o.desc;
+ }
+ function updatePuzzlePanel(){
+  const config={
+   lab:["실험대 서랍","시약병의 색 순서에 맞춰 세 자리 암호를 입력하세요.","숫자 암호"],
+   chess:["황동 상자","벽화 메모에서 나이트와 비숍의 값을 순서대로 읽으세요.","두 자리 암호"],
+   symbols:["숨겨진 기호","UV 랜턴을 사용해 숨겨진 숫자를 발견하세요. 도구를 사용한 뒤 확인을 누르세요.","숫자 확인"],
+   door:["최종 출구 암호","황동 열쇠를 소지하고 최종 암호를 입력하세요.","세 자리 암호"]
+  }[state.room];
+  $("puzzleTitle").textContent=state.solved[state.room]?(state.room==="door"?"출구가 열렸습니다":"이 장소의 퍼즐 해결 완료"):config[0];
+  $("puzzlePrompt").textContent=state.solved[state.room]?"이 퍼즐은 이미 해결했습니다. 다른 장소를 조사해 보세요.":config[1];
+  $("answer").placeholder=config[2];$("answer").disabled=state.solved[state.room]||state.ended;
+  $("answerForm").querySelector("button").disabled=state.solved[state.room]||state.ended;
+  $("hintBtn").disabled=state.hints<=0||state.solved[state.room]||state.ended;
+  $("useItemBtn").disabled=!state.selectedItem||state.ended||state.solved[state.room];
+ }
+ function renderInventory(){
+  $("inventory").innerHTML=state.inventory.length?state.inventory.map(i=>`<button class="item ${state.selectedItem===i.id?"active":""}" data-item="${i.id}">${i.icon} ${i.name}</button>`).join(""):'<span class="item empty">아직 획득한 아이템이 없습니다.</span>';
+  $("inventory").querySelectorAll("[data-item]").forEach(b=>b.addEventListener("click",()=>{state.selectedItem=b.dataset.item;renderInventory();updatePuzzlePanel();$("feedback").textContent=`${itemById(state.selectedItem).name}을(를) 선택했습니다. 사용할 장소로 이동하세요.`;}));
+  $("selectedLabel").textContent="선택한 아이템: "+(state.selectedItem?itemById(state.selectedItem).name:"없음");
+  $("itemCount").textContent=state.inventory.length;
+ }
+ function itemById(id){return ({uv:{id:"uv",name:"UV 랜턴",icon:"🔦"},key:{id:"key",name:"황동 열쇠",icon:"🗝️"}})[id];}
+ function addItem(id){if(!state.inventory.some(x=>x.id===id)){state.inventory.push(itemById(id));state.selectedItem=id;renderInventory();log(`${itemById(id).name} 획득!`);}}
+ function solvedCount(){return Object.values(state.solved).filter(Boolean).length;}
+ function updateStats(){
+  const m=Math.floor(state.seconds/60),s=state.seconds%60;$("timer").textContent=`${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+  $("hints").textContent=state.hints;$("puzzleCount").textContent=`${solvedCount()} / 4`;$("progress").style.width=(solvedCount()/4*100)+"%";
+ }
+ function setRoom(room){state.room=room;state.selectedObject=currentObjects()[0].id;renderRoom();$("feedback").textContent="주변을 조사하고 단서를 연결해 보세요.";}
+ function useItem(){
+  if(!state.selectedItem){$("feedback").textContent="먼저 소지품에서 사용할 아이템을 선택하세요.";return;}
+  if(state.room==="symbols"&&state.selectedItem==="uv"){
+   state.discovered.secretNumber=true;$("feedback").textContent="UV 빛 아래 숨겨진 숫자 8이 나타났습니다! 최종 암호의 마지막 단서입니다.";log("UV 랜턴으로 숨겨진 숫자 8을 발견했습니다.");state.solved.symbols=true;updateStats();renderRoom();updatePuzzlePanel();return;
+  }
+  if(state.room==="door"&&state.selectedItem==="key"){
+   $("feedback").textContent="황동 열쇠가 자물쇠 옆 열쇠 구멍에 맞습니다. 이제 숫자 암호를 입력하세요.";log("황동 열쇠로 출구의 열쇠 구멍을 열었습니다.");state.discovered.keyUsed=true;return;
+  }
+  $("feedback").textContent=state.selectedItem==="uv"?"UV 랜턴은 기호 서가의 숨겨진 표시를 찾는 데 쓸 수 있습니다.":"황동 열쇠는 출구 철문의 열쇠 구멍에 사용해야 합니다.";
+ }
+ function submitAnswer(e){
+  e.preventDefault();if(state.ended)return;
+  const v=$("answer").value.trim();$("answer").value="";
+  if(state.solved[state.room])return;
+  if(state.room==="lab"){
+   if(v==="472"){state.solved.lab=true;addItem("uv");$("feedback").textContent="정답! 서랍이 열리며 UV 랜턴을 발견했습니다.";log("실험대 서랍을 열었습니다. 다음은 체스 벽화입니다.");}
+   else wrong("숫자와 색의 순서를 다시 확인해 보세요.");
+  }else if(state.room==="chess"){
+   if(v==="24"){state.solved.chess=true;addItem("key");$("feedback").textContent="정답! 황동 상자에서 열쇠를 찾았습니다.";log("체스 암호를 풀고 황동 열쇠를 얻었습니다.");}
+   else wrong("나이트와 비숍의 값을 왼쪽부터 읽어 보세요.");
+  }else if(state.room==="symbols"){
+   if(state.solved.symbols){$("feedback").textContent="숨겨진 숫자 8을 발견했습니다. 출구에서 다른 단서와 조합하세요.";}
+   else {$("feedback").textContent="숫자를 입력하기 전에 UV 랜턴을 선택하고 사용하세요.";}
+  }else if(state.room==="door"){
+   if(!state.inventory.some(x=>x.id==="key")){$("feedback").textContent="철문이 열리지 않습니다. 먼저 황동 열쇠를 찾아야 합니다.";return;}
+   if(!state.discovered.keyUsed){$("feedback").textContent="먼저 황동 열쇠를 선택하고 '선택한 아이템 사용'을 눌러 열쇠 구멍을 여세요.";return;}
+   if(!state.solved.symbols){$("feedback").textContent="아직 기호 서가의 숨겨진 숫자를 확인하지 않았습니다.";return;}
+   if(v==="478"){state.solved.door=true;log("최종 암호가 맞았습니다. 철문이 열립니다!");finish(true);}
+   else wrong("실험대의 색 순서와 기호 서가에서 발견한 숫자를 다시 조합해 보세요.");
+  }
+  updateStats();renderRoom();updatePuzzlePanel();
+ }
+ function wrong(msg){state.wrong++;$("feedback").textContent="암호가 맞지 않습니다. "+msg;log("잘못된 암호를 입력했습니다.");}
+ function showHint(){
+  const room=state.room;if(state.hints<=0||state.solved[room])return;
+  const idx=Math.min(state.usedHints[room],2);$("feedback").textContent="힌트 "+(idx+1)+": "+hints[room][idx];state.usedHints[room]++;state.hints--;updateStats();updatePuzzlePanel();log(`${roomInfo[room].title}에서 힌트를 사용했습니다.`);
+ }
+ function finish(won){
+  if(state.ended)return;state.ended=true;state.running=false;clearInterval(timerId);
+  const used=TOTAL_SECONDS-state.seconds,mm=Math.floor(used/60),ss=used%60;
+  let grade="C";if(won&&state.hints>=2&&state.wrong<=1)grade="S";else if(won&&state.hints>=1&&state.wrong<=3)grade="A";else if(won)grade="B";
+  $("endingIcon").textContent=won?"🏆":"⏳";$("modalTitle").textContent=won?"탈출 성공!":"시간 종료";
+  $("modalText").textContent=won?"모든 단서를 연결해 연금술사의 연구실에서 탈출했습니다.":"제한 시간이 끝났습니다. 다시 도전해 퍼즐을 해결해 보세요.";
+  $("resultDetails").innerHTML=`<p><strong>소요 시간:</strong> ${String(mm).padStart(2,"0")}:${String(ss).padStart(2,"0")}</p><p><strong>사용한 힌트:</strong> ${3-state.hints} / 3</p><p><strong>해결한 퍼즐:</strong> ${solvedCount()} / 4</p><p><strong>오답 횟수:</strong> ${state.wrong}</p><p><strong>등급:</strong> ${won?grade:"미완료"}</p>`;
+  $("overlay").classList.add("show");updatePuzzlePanel();
+ }
+ function startTimer(){
+  clearInterval(timerId);timerId=setInterval(()=>{if(!state.running||state.ended)return;state.seconds--;updateStats();if(state.seconds<=0){state.seconds=0;updateStats();finish(false);}},1000);
+ }
+ function restart(){
+  clearInterval(timerId);state=freshState();$("overlay").classList.remove("show");$("feedback").textContent="단서를 조사하고 암호를 입력해 보세요.";renderRoom();renderInventory();renderLog();updateStats();startTimer();
+ }
+ document.querySelectorAll("[data-room]").forEach(b=>b.addEventListener("click",()=>setRoom(b.dataset.room)));
+ $("answerForm").addEventListener("submit",submitAnswer);$("hintBtn").addEventListener("click",showHint);$("useItemBtn").addEventListener("click",useItem);
+ $("restartTop").addEventListener("click",restart);$("playAgain").addEventListener("click",restart);$("closeModal").addEventListener("click",()=>$("overlay").classList.remove("show"));
+ restart();
+})();
+</script>
+</body>
+</html>

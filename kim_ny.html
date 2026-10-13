@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>미스터리 서재 - 방탈출 게임</title>
+    <!-- Tailwind CSS for modern UI styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for interactive icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts for immersive atmosphere -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #0b0c10;
+            color: #c5c6c7;
+            user-select: none;
+            overflow: hidden;
+        }
+        .cinzel-font {
+            font-family: 'Cinzel', serif;
+        }
+        /* Custom flashlight cursor effect */
+        #flashlight {
+            position: absolute;
+            pointer-events: none;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle 220px at 50% 50%, rgba(0,0,0,0) 0%, rgba(5,5,8,0.85) 70%, rgba(2,2,4,0.96) 100%);
+            z-index: 40;
+            transition: background 0.05s ease;
+        }
+        /* Custom animations */
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 10px rgba(234, 179, 8, 0.4); }
+            50% { box-shadow: 0 0 25px rgba(234, 179, 8, 0.8); }
+        }
+        .interactive-glow:hover {
+            animation: pulse-glow 1.5s infinite;
+            filter: brightness(1.2);
+            cursor: pointer;
+        }
+        .modal-blur {
+            backdrop-filter: blur(8px);
+        }
+        /* Scrollbar custom */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1f2833;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #45a29e;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="w-screen h-screen flex flex-col relative">
+
+    <!-- Flashlight layer -->
+    <div id="flashlight"></div>
+
+    <!-- Top Navigation & Status Bar -->
+    <header class="bg-[#1f2833]/90 border-b border-[#45a29e]/30 px-6 py-3 flex justify-between items-center z-50 shadow-lg">
+        <div class="flex items-center space-x-4">
+            <h1 class="cinzel-font text-2xl font-bold tracking-wider text-[#66fcf1] flex items-center gap-2">
+                <i class="fa-solid fa-key"></i> THE STUDY ESCAPE
+            </h1>
+            <span class="text-xs px-3 py-1 bg-red-950/80 border border-red-600/50 rounded-full text-red-300 font-mono tracking-wider flex items-center gap-1.5">
+                <i class="fa-regular fa-clock"></i> 남은 시간: <span id="timer-display" class="font-bold text-red-400">45:00</span>
+            </span>
+        </div>
+        <div class="flex items-center space-x-3">
+            <button onclick="toggleHint()" class="bg-[#45a29e]/20 hover:bg-[#45a29e]/40 border border-[#45a29e] text-[#66fcf1] px-4 py-1.5 rounded-lg text-sm transition flex items-center gap-2 shadow">
+                <i class="fa-solid fa-lightbulb text-yellow-400"></i> 힌트 (<span id="hint-count">3</span>)
+            </button>
+            <button onclick="toggleSound()" id="sound-btn" class="bg-gray-800 hover:bg-gray-700 border border-gray-600 text-gray-300 px-3 py-1.5 rounded-lg text-sm transition">
+                <i class="fa-solid fa-volume-high"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Game Viewport -->
+    <main id="game-container" class="flex-1 relative overflow-hidden bg-[#0b0c10] flex items-center justify-center">
+        
+        <!-- Room Background Canvas / Layer -->
+        <div id="room-view" class="relative w-full max-w-[1200px] h-[650px] mx-auto bg-gradient-to-b from-[#11161d] to-[#07090c] border-4 border-[#1f2833] rounded-2xl shadow-2xl overflow-hidden flex flex-col justify-between p-8">
+            
+            <!-- Room Back Wall & Atmosphere -->
+            <div class="absolute inset-0 pointer-events-none opacity-40 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-900/20 via-transparent to-black"></div>
+
+            <!-- Wall Decor & Light Source -->
+            <div class="flex justify-between items-start z-10 px-12 pt-4">
+                <!-- Painting / Portrait (Clickable) -->
+                <div onclick="inspectPainting()" class="interactive-glow group relative w-36 h-48 bg-[#1a120b] border-8 border-[#3b2716] rounded shadow-xl flex flex-col items-center justify-center p-2 transition transform hover:scale-105">
+                    <div class="absolute -top-3 text-[#d4af37] text-xs font-serif">오래된 초상화</div>
+                    <div class="w-full h-full bg-[#261b11] flex items-center justify-center border border-[#4a3520] overflow-hidden">
+                        <i class="fa-solid fa-user-secret text-4xl text-amber-700/60 group-hover:text-amber-500 transition"></i>
+                    </div>
+                    <div class="absolute bottom-1 right-1 bg-black/60 px-1 rounded text-[10px] text-amber-400"><i class="fa-solid fa-magnifying-glass"></i> 조사</div>
+                </div>
+
+                <!-- Window with thunderstorm effect -->
+                <div class="relative w-48 h-56 bg-[#0f172a] border-4 border-[#334155] rounded-t-full shadow-inner flex flex-col items-center justify-center overflow-hidden">
+                    <div class="absolute inset-0 bg-blue-950/30"></div>
+                    <div class="w-full h-full flex flex-wrap p-2 gap-1 opacity-60">
+                        <div class="w-1/2 h-1/2 border-r border-b border-cyan-900"></div>
+                        <div class="w-1/2 h-1/2 border-b border-cyan-900"></div>
+                        <div class="w-1/2 h-1/2 border-r border-cyan-900"></div>
+                        <div class="w-1/2 h-1/2 border-cyan-900"></div>
+                    </div>
+                    <div class="absolute bottom-2 text-[10px] text-cyan-300 font-mono tracking-widest bg-black/50 px-2 py-0.5 rounded">창밖: 폭우 중</div>
+                </div>
+
+                <!-- Wall Clock (Clickable - Puzzle) -->
+                <div onclick="inspectClock()" class="interactive-glow relative w-36 h-36 bg-[#18181b] border-6 border-[#52525b] rounded-full shadow-xl flex flex-col items-center justify-center cursor-pointer transition transform hover:scale-105">
+                    <div class="absolute top-1 text-[10px] text-gray-400 font-serif">시계</div>
+                    <div class="w-24 h-24 rounded-full border border-gray-700 flex items-center justify-center relative bg-neutral-900">
+                        <div class="absolute w-1 h-8 bg-gray-300 origin-bottom transform rotate-45 bottom-1/2"></div>
+                        <div class="absolute w-1.5 h-6 bg-red-500 origin-bottom transform rotate-180 bottom-1/2"></div>
+                        <div class="w-2 h-2 bg-white rounded-full z-10"></div>
+                    </div>
+                    <div class="absolute bottom-1 bg-black/60 px-1 rounded text-[10px] text-yellow-400"><i class="fa-regular fa-clock"></i> 시간 확인</div>
+                </div>
+            </div>
+
+            <!-- Center Furniture & Interactive Objects Layer -->
+            <div class="flex justify-between items-end z-10 px-6 pb-4">
+                
+                <!-- Bookshelf (Left) -->
+                <div onclick="inspectBookshelf()" class="interactive-glow relative w-64 h-72 bg-[#1c140d] border-4 border-[#2d2015] rounded-lg shadow-2xl p-3 flex flex-col justify-between transition transform hover:scale-[1.02]">
+                    <div class="text-xs text-amber-200/80 font-serif border-b border-amber-900/50 pb-1 flex justify-between items-center">
+                        <span>서재 책장</span>
+                        <i class="fa-solid fa-book text-amber-500"></i>
+                    </div>
+                    <div class="grid grid-cols-4 gap-1.5 h-full py-2 items-end">
+                        <div class="bg-red-900 h-16 rounded-sm shadow"></div>
+                        <div class="bg-blue-900 h-20 rounded-sm shadow"></div>
+                        <div class="bg-emerald-900 h-14 rounded-sm shadow"></div>
+                        <div class="bg-amber-800 h-18 rounded-sm shadow border border-yellow-500/40"></div>
+                        <div class="bg-purple-900 h-16 rounded-sm shadow"></div>
+                        <div class="bg-yellow-900 h-12 rounded-sm shadow"></div>
+                        <div class="bg-cyan-900 h-20 rounded-sm shadow"></div>
+                        <div class="bg-rose-900 h-15 rounded-sm shadow"></div>
+                    </div>
+                    <div class="text-[10px] text-center text-amber-400/70 bg-black/40 py-1 rounded">책들 사이에 수상한 틈이 있다...</div>
+                </div>
+
+                <!-- Center Desk with Safe & Drawers -->
+                <div class="relative w-96 h-60 bg-[#221811] border-4 border-[#3b271a] rounded-xl shadow-2xl flex flex-col justify-between p-4">
+                    <div class="flex justify-between items-center text-xs text-amber-300 font-serif border-b border-amber-900/40 pb-1">
+                        <span>고풍스러운 나무 책상</span>
+                        <div class="flex gap-2">
+                            <span onclick="inspectDeskTop()" class="interactive-glow bg-amber-950 px-2 py-0.5 rounded text-[10px] text-yellow-300 border border-amber-700 cursor-pointer">책상 위</span>
+                            <span onclick="inspectDeskDrawer()" class="interactive-glow bg-amber-950 px-2 py-0.5 rounded text-[10px] text-yellow-300 border border-amber-700 cursor-pointer">서랍장</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Desk center items -->
+                    <div class="flex justify-around items-center my-auto">
+                        <!-- Desk Lamp -->
+                        <div class="w-12 h-16 bg-neutral-800 rounded-t-full border border-neutral-600 flex flex-col items-center justify-end p-1 shadow-lg">
+                            <div class="w-8 h-6 bg-yellow-400/80 rounded-t-full blur-[1px]"></div>
+                        </div>
+                        <!-- Open Notebook / Memo -->
+                        <div onclick="inspectNotebook()" class="interactive-glow w-20 h-14 bg-amber-100 text-neutral-900 rounded shadow-md p-1.5 flex flex-col justify-between cursor-pointer transform -rotate-3 hover:rotate-0 transition">
+                            <div class="text-[8px] font-bold text-red-700">MEMO</div>
+                            <div class="text-[6px] text-neutral-700 leading-tight">비밀번호는 별들의 시간 순서대로...</div>
+                        </div>
+                    </div>
+
+                    <div class="text-[10px] text-center text-amber-400/60 font-mono">
+                        <i class="fa-solid fa-lock text-red-400"></i> 하단 금고 잠김 상태
+                    </div>
+                </div>
+
+                <!-- Safe Box Cabinet (Right) -->
+                <div onclick="inspectSafe()" class="interactive-glow relative w-56 h-64 bg-neutral-900 border-4 border-neutral-700 rounded-lg shadow-2xl p-4 flex flex-col justify-between transition transform hover:scale-[1.02]">
+                    <div class="text-xs text-neutral-400 font-mono border-b border-neutral-800 pb-1 flex justify-between">
+                        <span>철제 비밀 금고</span>
+                        <i class="fa-solid fa-vault text-amber-500"></i>
+                    </div>
+                    <div class="flex flex-col items-center justify-center my-auto space-y-2">
+                        <div class="w-20 h-20 rounded-full border-4 border-neutral-600 bg-neutral-800 flex items-center justify-center shadow-inner relative">
+                            <div class="w-3 h-12 bg-neutral-500 rounded-sm transform origin-bottom rotate-45"></div>
+                            <div class="absolute w-4 h-4 bg-neutral-900 rounded-full border border-neutral-400"></div>
+                        </div>
+                        <span id="safe-status-text" class="text-[10px] font-mono text-red-400 bg-black/60 px-2 py-0.5 rounded border border-red-900">LOCKED (4자리 암호)</span>
+                    </div>
+                    <div class="text-[10px] text-center text-gray-500">클릭하여 번호 입력</div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Inventory Bar -->
+        <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-[#1f2833]/90 border border-[#45a29e]/40 px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-4 z-40 backdrop-blur">
+            <div class="text-xs font-bold text-[#66fcf1] border-r border-gray-600 pr-4 flex items-center gap-2">
+                <i class="fa-solid fa-briefcase"></i> 인벤토리
+            </div>
+            <div id="inventory-slots" class="flex gap-3">
+                <!-- Dynamic Inventory Slots -->
+                <div class="w-12 h-12 bg-black/40 border-2 border-dashed border-gray-600 rounded-xl flex items-center justify-center text-gray-600 text-sm slot">1</div>
+                <div class="w-12 h-12 bg-black/40 border-2 border-dashed border-gray-600 rounded-xl flex items-center justify-center text-gray-600 text-sm slot">2</div>
+                <div class="w-12 h-12 bg-black/40 border-2 border-dashed border-gray-600 rounded-xl flex items-center justify-center text-gray-600 text-sm slot">3</div>
+                <div class="w-12 h-12 bg-black/40 border-2 border-dashed border-gray-600 rounded-xl flex items-center justify-center text-gray-600 text-sm slot">4</div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal Container (Hidden by Default) -->
+    <div id="modal-backdrop" class="fixed inset-0 bg-black/80 modal-blur z-50 hidden flex items-center justify-center p-4">
+        <div id="modal-content" class="bg-[#121820] border-2 border-[#45a29e]/50 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+            <!-- Modal Header -->
+            <div class="bg-[#1f2833] px-6 py-4 flex justify-between items-center border-b border-gray-700">
+                <h3 id="modal-title" class="cinzel-font text-lg font-bold text-[#66fcf1]">오브젝트 조사</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-white text-lg px-2"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <!-- Modal Body -->
+            <div id="modal-body" class="p-6 flex flex-col gap-4 max-h-[70vh] overflow-y-auto">
+                <!-- Dynamic Content injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Box / Notification Modal -->
+    <div id="msg-backdrop" class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[#18222d] border border-[#45a29e] w-full max-w-md rounded-xl p-6 shadow-2xl flex flex-col items-center text-center space-y-4">
+            <div id="msg-icon" class="text-4xl text-[#66fcf1]"><i class="fa-solid fa-circle-info"></i></div>
+            <p id="msg-text" class="text-sm text-gray-200 leading-relaxed">알림 메시지 내용입니다.</p>
+            <button onclick="closeMsg()" class="bg-[#45a29e] hover:bg-[#357975] text-black font-bold px-6 py-2 rounded-lg text-sm transition shadow">확인</button>
+        </div>
+    </div>
+
+    <!-- Clear / Victory Modal -->
+    <div id="victory-backdrop" class="fixed inset-0 bg-black/90 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-gradient-to-b from-[#1a2e26] to-[#0b1410] border-4 border-emerald-500 w-full max-w-xl rounded-3xl p-8 shadow-2xl flex flex-col items-center text-center space-y-6">
+            <div class="w-20 h-20 bg-emerald-500/20 border-2 border-emerald-400 rounded-full flex items-center justify-center text-emerald-400 text-4xl shadow-[0_0_30px_rgba(16,185,129,0.5)]">
+                <i class="fa-solid fa-door-open"></i>
+            </div>
+            <h2 class="cinzel-font text-3xl font-extrabold text-emerald-400 tracking-wider">탈출 성공!</h2>
+            <p id="victory-desc" class="text-sm text-gray-300 leading-relaxed">
+                축하합니다! 모든 단서를 추리하여 방의 비밀을 풀고 무사히 서재에서 탈출했습니다.
+            </p>
+            <div class="bg-black/50 px-6 py-3 rounded-xl border border-emerald-800 font-mono text-xs text-emerald-300">
+                기록된 탈출 시간: <span id="final-time" class="font-bold text-white">00:00</span>
+            </div>
+            <button onclick="location.reload()" class="bg-emerald-500 hover:bg-emerald-600 text-neutral-950 font-bold px-8 py-3 rounded-xl text-base transition shadow-lg">
+                다시 플레이하기
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Game State Variables
+        let gameState = {
+            timeLeft: 2700, // 45 minutes in seconds
+            hintsLeft: 3,
+            inventory: [],
+            flags: {
+                paintingSearched: false,
+                clockSolved: false,
+                deskDrawerUnlocked: false,
+                keyFound: false,
+                safeOpened: false,
+                uvLightActive: false
+            }
+        };
+
+        let timerInterval = null;
+
+        // Initialize game on load
+        window.onload = function() {
+            startTimer();
+            setupFlashlightEffect();
+            showCustomMsg("안개 낀 폭우 속, 잠긴 서재에 갇혔다. 제한 시간 내에 단서를 조합해 이곳을 탈출해야 한다...", "미스터리 서재 조사 시작");
+        };
+
+        // Flashlight follower effect
+        function setupFlashlightEffect() {
+            const flashlight = document.getElementById('flashlight');
+            window.addEventListener('mousemove', (e) => {
+                const x = (e.clientX / window.innerWidth) * 100;
+                const y = (e.clientY / window.innerHeight) * 100;
+                flashlight.style.background = `radial-gradient(circle 240px at ${x}% ${y}%, rgba(0,0,0,0) 0%, rgba(5,5,8,0.85) 70%, rgba(2,2,4,0.96) 100%)`;
+            });
+        }
+
+        // Timer function
+        function startTimer() {
+            const display = document.getElementById('timer-display');
+            timerInterval = setInterval(() => {
+                gameState.timeLeft--;
+                let minutes = Math.floor(gameState.timeLeft / 60);
+                let seconds = gameState.timeLeft % 60;
+                display.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+                if (gameState.timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    gameOver();
+                }
+            }, 1000);
+        }
+
+        function gameOver() {
+            showCustomMsg("시간이 초과되었습니다! 방 안의 공기가 차갑게 얼어붙으며 탈출에 실패했습니다.", "게임 오버");
+            setTimeout(() => { location.reload(); }, 4000);
+        }
+
+        // Message Box Helpers
+        function showCustomMsg(text, title = "안내") {
+            document.getElementById('msg-text').textContent = text;
+            document.getElementById('msg-backdrop').classList.remove('hidden');
+        }
+
+        function closeMsg() {
+            document.getElementById('msg-backdrop').classList.add('hidden');
+        }
+
+        // Modal Helpers
+        function openModal(title, htmlContent) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-body').innerHTML = htmlContent;
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-backdrop').classList.add('hidden');
+        }
+
+        // Hint System
+        function toggleHint() {
+            if (gameState.hintsLeft <= 0) {
+                showCustomMsg("사용할 수 있는 힌트가 모두 소진되었습니다!", "힌트 소진");
+                return;
+            }
+            gameState.hintsLeft--;
+            document.getElementById('hint-count').textContent = gameState.hintsLeft;
+
+            let hintText = "";
+            if (!gameState.flags.clockSolved) {
+                hintText = "힌트: 벽시계의 바늘이 가리키는 방향을 주의 깊게 살펴보세요. 각 바늘의 위치(시, 분)가 힌트가 됩니다.";
+            } else if (!gameState.flags.deskDrawerUnlocked) {
+                hintText = "힌트: 책상 서랍을 열려면 시계에서 얻은 숫자를 조합해야 합니다. (예: 시침 -> 분침 순서)";
+            } else if (!gameState.flags.safeOpened) {
+                hintText = "힌트: 서랍 속에서 찾은 UV 손전등과 책장의 책 색상 배열을 활용하세요. 별들의 순서(빨강-초록-파랑-노랑)를 금고에 입력하세요.";
+            } else {
+                hintText = "힌트: 금고 안의 열쇠를 획득했다면 이제 문을 열고 탈출할 일만 남았습니다!";
+            }
+            showCustomMsg(hintText, "추리 힌트");
+        }
+
+        // Sound effect toggle placeholder
+        let soundOn = true;
+        function toggleSound() {
+            soundOn = !soundOn;
+            const btn = document.getElementById('sound-btn');
+            btn.innerHTML = soundOn ? '<i class="fa-solid fa-volume-high"></i>' : '<i class="fa-solid fa-volume-xmark text-red-400"></i>';
+        }
+
+        // --- INTERACTIVE OBJECT FUNCTIONS ---
+
+        // 1. Painting Inspection
+        function inspectPainting() {
+            gameState.flags.paintingSearched = true;
+            let html = `
+                <div class="flex flex-col items-center space-y-4">
+                    <div class="w-48 h-64 bg-[#261b11] border-4 border-[#3b2716] flex flex-col items-center justify-center p-4 shadow-inner relative">
+                        <i class="fa-solid fa-user-secret text-6xl text-amber-600/70 mb-2"></i>
+                        <p class="text-xs text-amber-300 font-serif text-center">"시간은 거꾸로 흐르고, 진실은 별빛 속에 잠긴다."</p>
+                    </div>
+                    <p class="text-sm text-gray-300 text-center">초상화 액자 뒷면에 희미하게 적힌 낙서가 보입니다. 문구가 의미하는 바가 무엇일까요?</p>
+                </div>
+            `;
+            openModal("오래된 초상화 조사", html);
+        }
+
+        // 2. Clock Inspection (Puzzle 1)
+        function inspectClock() {
+            let html = `
+                <div class="flex flex-col items-center space-y-4">
+                    <div class="w-32 h-32 rounded-full border-4 border-gray-600 bg-neutral-900 flex items-center justify-center relative shadow-inner">
+                        <div class="absolute w-1 h-12 bg-gray-300 origin-bottom transform rotate-[135deg] bottom-1/2"></div>
+                        <div class="absolute w-1.5 h-10 bg-red-500 origin-bottom transform rotate-[210deg] bottom-1/2"></div>
+                        <div class="w-3 h-3 bg-white rounded-full z-10"></div>
+                    </div>
+                    <p class="text-xs text-gray-300 text-center">시계 바늘이 특정 각도를 가리키고 있습니다.<br>시침은 <strong>7</strong>을, 분침은 <strong>9</strong>를 가리키고 있는 것 같습니다. (숫자 조합: 0709 또는 79...)</p>
+                    <div class="flex gap-2">
+                        <button onclick="solveClockPuzzle()" class="bg-[#45a29e] hover:bg-[#357975] text-black font-bold px-4 py-2 rounded text-xs transition">시계 기록하기</button>
+                    </div>
+                </div>
+            `;
+            openModal("벽시계 상세 조사", html);
+        }
+
+        function solveClockPuzzle() {
+            gameState.flags.clockSolved = true;
+            closeModal();
+            showCustomMsg("벽시계의 시간 조합(0709)을 노트에 기록했습니다! 이 숫자가 책상 서랍의 비밀번호일 수 있습니다.", "단서 획득");
+        }
+
+        // 3. Notebook Inspection
+        function inspectNotebook() {
+            let html = `
+                <div class="bg-amber-50 text-neutral-900 p-6 rounded-lg shadow-inner font-serif space-y-3">
+                    <h4 class="font-bold text-red-800 text-base border-b border-red-300 pb-1">연구원 일지 발췌</h4>
+                    <p class="text-xs leading-relaxed">"금고를 열기 위해서는 책장에 꽃힌 책들의 색상 순서와 일지의 암호가 필요하다. 빨강, 초록, 파랑, 노랑 순서로 별자리가 배열되어 있다..."</p>
+                    <p class="text-xs text-gray-600 mt-2">비밀번호 힌트: [Red = 3], [Green = 5], [Blue = 2], [Yellow = 8]</p>
+                </div>
+            `;
+            openModal("책상 위 메모장", html);
+        }
+
+        // 4. Desk Top & Drawers (Puzzle 2)
+        function inspectDeskTop() {
+            let html = `
+                <div class="flex flex-col items-center space-y-4">
+                    <p class="text-sm text-gray-300">책상 위에는 펜과 스탠드, 그리고 풀리지 않은 퍼즐 상자가 있습니다.</p>
+                    <div class="bg-black/40 p-4 rounded-xl border border-gray-700 flex flex-col items-center space-y-3">
+                        <span class="text-xs text-yellow-400 font-mono">2자리 비밀번호 입력 (시계 단서)</span>
+                        <div class="flex gap-2">
+                            <input type="password" id="drawer-pass" maxlength="4" placeholder="숫자 4자리" class="bg-neutral-900 border border-gray-600 text-white px-3 py-1.5 rounded text-center tracking-widest text-sm focus:outline-none focus:border-[#45a29e]">
+                            <button onclick="tryOpenDrawer()" class="bg-[#45a29e] hover:bg-[#357975] text-black font-bold px-4 py-1.5 rounded text-xs">서랍 열기</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            openModal("책상 서랍 잠금장치", html);
+        }
+
+        function inspectDeskDrawer() {
+            if (!gameState.flags.deskDrawerUnlocked) {
+                inspectDeskTop();
+            } else {
+                let html = `
+                    <div class="flex flex-col items-center space-y-4">
+                        <p class="text-sm text-emerald-400"><i class="fa-solid fa-check"></i> 서랍이 열려 있습니다. 안에서 특별한 도구를 발견했습니다!</p>
+                        <div onclick="takeItem('UV 손전등')" class="interactive-glow bg-neutral-800 border border-cyan-500 p-4 rounded-xl flex items-center gap-4 cursor-pointer">
+                            <i class="fa-solid fa-flashlight text-3xl text-cyan-400"></i>
+                            <div>
+                                <h5 class="text-sm font-bold text-white">UV 블랙라이트 손전등</h5>
+                                <p class="text-xs text-gray-400">보이지 않는 특수 문양을 비출 수 있는 도구입니다.</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                openModal("열린 서랍 속", html);
+            }
+        }
+
+        function tryOpenDrawer() {
+            const val = document.getElementById('drawer-pass').value;
+            if (val === "0709" || val === "79") {
+                gameState.flags.deskDrawerUnlocked = true;
+                closeModal();
+                showCustomMsg("딸깍! 책상 서랍이 열렸습니다. 안에서 UV 손전등을 획득했습니다!", "서랍 개방 성공");
+                addItemToInventory("UV 손전등", "fa-flashlight text-cyan-400");
+            } else {
+                showCustomMsg("비밀번호가 틀렸습니다. 시계의 시간을 다시 확인해보세요.", "오류");
+            }
+        }
+
+        // 5. Bookshelf Inspection
+        function inspectBookshelf() {
+            let html = `
+                <div class="flex flex-col space-y-3">
+                    <p class="text-xs text-amber-200">책장에 꽂힌 책들의 색상이 질서정연하게 배열되어 있습니다.</p>
+                    <div class="flex justify-around bg-black/50 p-4 rounded-xl border border-amber-900/40">
+                        <div class="text-center"><div class="w-10 h-24 bg-red-800 rounded mx-auto mb-1"></div><span class="text-[10px] text-red-400">RED: 3</span></div>
+                        <div class="text-center"><div class="w-10 h-24 bg-emerald-800 rounded mx-auto mb-1"></div><span class="text-[10px] text-emerald-400">GREEN: 5</span></div>
+                        <div class="text-center"><div class="w-10 h-24 bg-blue-800 rounded mx-auto mb-1"></div><span class="text-[10px] text-blue-400">BLUE: 2</span></div>
+                        <div class="text-center"><div class="w-10 h-24 bg-amber-600 rounded mx-auto mb-1"></div><span class="text-[10px] text-yellow-400">YELLOW: 8</span></div>
+                    </div>
+                    <p class="text-xs text-gray-300 text-center">일지의 암호 순서(빨강-초록-파랑-노랑)를 대입하면 금고 비밀번호가 완성됩니다!</p>
+                </div>
+            `;
+            openModal("책장 색상 배열 조사", html);
+        }
+
+        // 6. Safe Box Inspection (Final Puzzle)
+        function inspectSafe() {
+            let html = `
+                <div class="flex flex-col items-center space-y-4">
+                    <div class="w-24 h-24 rounded-full border-4 border-neutral-600 bg-neutral-800 flex items-center justify-center relative shadow-inner">
+                        <i class="fa-solid fa-vault text-3xl text-amber-500"></i>
+                    </div>
+                    <p class="text-xs text-gray-300 text-center">4자리 전자 비밀번호 입력 장치가 있습니다.<br>(힌트: 책장의 색상별 숫자 순서 조합)</p>
+                    <div class="flex gap-2">
+                        <input type="password" id="safe-pass" maxlength="4" placeholder="4자리 암호" class="bg-neutral-900 border border-gray-600 text-white px-3 py-1.5 rounded text-center tracking-widest text-sm focus:outline-none focus:border-[#45a29e]">
+                        <button onclick="tryOpenSafe()" class="bg-[#45a29e] hover:bg-[#357975] text-black font-bold px-4 py-1.5 rounded text-xs">금고 해제</button>
+                    </div>
+                </div>
+            `;
+            openModal("철제 금고 잠금장치", html);
+        }
+
+        function tryOpenSafe() {
+            const val = document.getElementById('safe-pass').value;
+            // Red:3, Green:5, Blue:2, Yellow:8 => 3528
+            if (val === "3528") {
+                gameState.flags.safeOpened = true;
+                closeModal();
+                document.getElementById('safe-status-text').textContent = "UNLOCKED (탈출 열쇠 획득)";
+                document.getElementById('safe-status-text').className = "text-[10px] font-mono text-emerald-400 bg-black/60 px-2 py-0.5 rounded border border-emerald-900";
+                
+                let successHtml = `
+                    <div class="flex flex-col items-center space-y-4">
+                        <div class="w-16 h-16 bg-yellow-500/20 border border-yellow-400 rounded-full flex items-center justify-center text-yellow-400 text-2xl">
+                            <i class="fa-solid fa-key"></i>
+                        </div>
+                        <h4 class="text-sm font-bold text-white">서재 출입문 열쇠 획득!</h4>
+                        <p class="text-xs text-gray-300 text-center">금고 안에서 반짝이는 황금빛 열쇠를 발견했습니다. 이제 문을 열고 탈출할 수 있습니다!</p>
+                        <button onclick="takeExitKey()" class="bg-emerald-500 hover:bg-emerald-600 text-neutral-950 font-bold px-6 py-2 rounded text-xs transition">열쇠 챙기기</button>
+                    </div>
+                `;
+                openModal("금고 개방 성공", successHtml);
+            } else {
+                showCustomMsg("금고 경고음이 울립니다! 비밀번호가 올바르지 않습니다.", "보안 경고");
+            }
+        }
+
+        function takeExitKey() {
+            gameState.flags.keyFound = true;
+            closeModal();
+            addItemToInventory("서재 탈출 열쇠", "fa-key text-yellow-400");
+            showCustomMsg("서재 탈출 열쇠를 인벤토리에 넣었습니다. 이제 화면 우측 상단의 문으로 탈출하세요!", "열쇠 획득");
+            
+            // Add Exit Door to Room View dynamically or trigger victory when clicked
+            enableExitDoor();
+        }
+
+        function enableExitDoor() {
+            // Add exit door icon to room view or trigger victory prompt
+            let roomView = document.getElementById('room-view');
+            let doorDiv = document.createElement('div');
+            doorDiv.className = "absolute top-6 right-8 w-20 h-32 bg-amber-950 border-4 border-amber-800 rounded-t-lg shadow-2xl flex items-center justify-center cursor-pointer interactive-glow animate-bounce";
+            doorDiv.innerHTML = `<i class="fa-solid fa-door-closed text-2xl text-yellow-400"></i>`;
+            doorDiv.onclick = triggerVictory;
+            roomView.appendChild(doorDiv);
+        }
+
+        // Inventory Management
+        function addItemToInventory(name, iconClass) {
+            gameState.inventory.push(name);
+            updateInventoryUI();
+        }
+
+        function updateInventoryUI() {
+            const slots = document.querySelectorAll('.slot');
+            slots.forEach((slot, index) => {
+                if (gameState.inventory[index]) {
+                    slot.innerHTML = `<i class="fa-solid ${getIconClass(gameState.inventory[index])} text-lg"></i>`;
+                    slot.title = gameState.inventory[index];
+                    slot.className = "w-12 h-12 bg-[#121820] border-2 border-[#45a29e] rounded-xl flex items-center justify-center text-cyan-400 text-sm shadow cursor-pointer";
+                }
+            });
+        }
+
+        function getIconClass(itemName) {
+            if (itemName.includes("손전등")) return "fa-flashlight text-cyan-400";
+            if (itemName.includes("열쇠")) return "fa-key text-yellow-400";
+            return "fa-box";
+        }
+
+        // Victory Condition
+        function triggerVictory() {
+            if (!gameState.flags.keyFound) {
+                showCustomMsg("문이 단단히 잠겨 있습니다. 금고 안에서 열쇠를 찾아야 합니다!", "잠긴 문");
+                return;
+            }
+
+            clearInterval(timerInterval);
+            let elapsedSecs = 2700 - gameState.timeLeft;
+            let mins = Math.floor(elapsedSecs / 60);
+            let secs = elapsedSecs % 60;
+            document.getElementById('final-time').textContent = `${String(mins).padStart(2, '0')}분 ${String(secs).padStart(2, '0')}초`;
+            document.getElementById('victory-backdrop').classList.remove('hidden');
+        }
+    </script>
+
+</body>
+</html>

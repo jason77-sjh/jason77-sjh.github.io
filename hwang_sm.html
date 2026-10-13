@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>연금술사의 비밀 연구실 - The Alchemist's Dark Laboratory</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Serif KR', serif;
+            background-color: #050404;
+            color: #d1d5db;
+            user-select: none;
+            overflow-x: hidden;
+        }
+        .cinzel {
+            font-family: 'Cinzel', serif;
+        }
+        .glow-red {
+            text-shadow: 0 0 12px rgba(220, 38, 38, 0.8), 0 0 24px rgba(153, 27, 27, 0.5);
+        }
+        .glow-purple {
+            text-shadow: 0 0 15px rgba(147, 51, 234, 0.8);
+        }
+        .glow-gold {
+            text-shadow: 0 0 10px rgba(217, 119, 6, 0.8);
+        }
+        
+        /* Custom vignette and horror pulse overlay */
+        .horror-overlay {
+            box-shadow: inset 0 0 120px rgba(0,0,0,0.95);
+        }
+        .hallucination-mode {
+            filter: hue-rotate(140deg) saturate(200%) contrast(120%);
+            animation: pulse-hallucination 2s infinite alternate;
+        }
+        @keyframes pulse-hallucination {
+            0% { filter: hue-rotate(130deg) saturate(180%) contrast(110%); }
+            100% { filter: hue-rotate(160deg) saturate(230%) contrast(130%); }
+        }
+        @keyframes flicker {
+            0%, 100% { opacity: 0.95; }
+            50% { opacity: 0.7; }
+            75% { opacity: 0.85; }
+            85% { opacity: 0.6; }
+        }
+        .candle-flicker {
+            animation: flicker 0.15s infinite;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3f0f0f;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-between p-2 sm:p-4 md:p-6 relative horror-overlay">
+
+    <!-- Background Canvas for Atmospheric Fog and Candle Lights -->
+    <canvas id="bgCanvas" class="fixed inset-0 pointer-events-none z-0 opacity-80"></canvas>
+
+    <!-- Header Section -->
+    <header class="w-full max-w-5xl flex flex-wrap items-center justify-between border-b border-red-950/80 pb-3 mb-3 z-10 gap-2">
+        <div class="flex items-center gap-3">
+            <span class="text-3xl text-red-700 candle-flicker">🕯️</span>
+            <div>
+                <h1 class="cinzel text-xl sm:text-2xl md:text-3xl font-black text-red-600 tracking-wider glow-red">연금술사의 비밀 연구실</h1>
+                <p class="text-[10px] sm:text-xs text-stone-500 font-mono tracking-widest uppercase">The Alchemist's Dark Laboratory - Horror Escape</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-4 flex-wrap">
+            <!-- Audio Toggle Button -->
+            <button id="audioBtn" onclick="toggleAudio()" class="bg-stone-900/90 hover:bg-red-950 border border-red-900/50 text-stone-300 px-3 py-1.5 rounded-lg text-xs font-mono transition flex items-center gap-1.5 shadow-lg">
+                <span id="audioIcon">🔇</span> <span id="audioText">음향 OFF</span>
+            </button>
+
+            <!-- Save File Button -->
+            <button onclick="downloadGameFile()" class="bg-red-950 hover:bg-red-900 text-stone-200 border border-red-700/60 px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-lg flex items-center gap-1">
+                📥 소스 저장 (.hdm/.html)
+            </button>
+
+            <!-- Panic Timer -->
+            <div class="bg-black/80 border border-red-900/80 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-mono text-red-500 flex items-center gap-1.5 shadow">
+                <span>⏱️</span> <span id="timerDisplay" class="font-bold">15:00</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Game Container -->
+    <main id="gameContainer" class="w-full max-w-5xl flex-1 flex flex-col gap-3 z-10">
+
+        <!-- Narrative Log Window -->
+        <div class="bg-stone-950/90 border border-red-950 rounded-xl p-3 sm:p-4 shadow-2xl backdrop-blur relative">
+            <div class="flex items-center justify-between border-b border-stone-800 pb-1.5 mb-2">
+                <span class="text-[11px] font-bold text-red-500 uppercase tracking-widest cinzel flex items-center gap-1">
+                    <span>📜</span> 관찰 기록 및 현상
+                </span>
+                <span id="hallucinationIndicator" class="hidden text-[10px] bg-purple-950 text-purple-300 px-2 py-0.5 rounded border border-purple-800 animate-pulse">
+                    🔮 환각 시약 발효 중 (숨겨진 표식 활성화)
+                </span>
+            </div>
+            <div id="narrativeLog" class="h-20 sm:h-24 overflow-y-auto text-xs sm:text-sm text-stone-300 leading-relaxed font-serif space-y-1 pr-1">
+                <p class="text-red-400 font-semibold">정신을 차려보니 코를 찌르는 피 비린내와 시약 향이 가득한 지하 연구실입니다.</p>
+                <p class="text-stone-400">사방에는 누군가의 유골과 굳어버린 혈흔, 기괴한 연금술 장치들이 배치되어 있습니다. 벽너머로 불길한 심장 소리가 울립니다...</p>
+            </div>
+        </div>
+
+        <!-- Main Viewport Area -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 flex-1">
+
+            <!-- Left: Hotspot Navigation & Exploration -->
+            <div class="bg-stone-950/80 border border-stone-800 rounded-xl p-3 flex flex-col gap-2.5 shadow-xl">
+                <h2 class="cinzel text-xs font-bold text-stone-400 border-b border-stone-800 pb-1.5 flex items-center gap-1">
+                    <span>👁️</span> 조사 가능 구역
+                </h2>
+                
+                <div class="flex flex-col gap-2 text-xs">
+                    <button onclick="inspectLocation('altar')" class="hotspot-btn text-left bg-stone-900/80 hover:bg-red-950/50 border border-stone-800 hover:border-red-900 p-2.5 rounded-lg transition flex items-center justify-between group">
+                        <span class="flex items-center gap-2">💀 <span>핏빛 제단과 해골</span></span>
+                        <span class="text-red-500 opacity-0 group-hover:opacity-100 transition text-[10px]">조사 ➔</span>
+                    </button>
+                    <button onclick="inspectLocation('desk')" class="hotspot-btn text-left bg-stone-900/80 hover:bg-red-950/50 border border-stone-800 hover:border-red-900 p-2.5 rounded-lg transition flex items-center justify-between group">
+                        <span class="flex items-center gap-2">📜 <span>연금술사의 혈서 책상</span></span>
+                        <span class="text-red-500 opacity-0 group-hover:opacity-100 transition text-[10px]">조사 ➔</span>
+                    </button>
+                    <button onclick="inspectLocation('shelf')" class="hotspot-btn text-left bg-stone-900/80 hover:bg-red-950/50 border border-stone-800 hover:border-red-900 p-2.5 rounded-lg transition flex items-center justify-between group">
+                        <span class="flex items-center gap-2">🧪 <span>기괴한 시약 진열대</span></span>
+                        <span class="text-red-500 opacity-0 group-hover:opacity-100 transition text-[10px]">조사 ➔</span>
+                    </button>
+                    <button onclick="inspectLocation('mirror')" class="hotspot-btn text-left bg-stone-900/80 hover:bg-red-950/50 border border-stone-800 hover:border-red-900 p-2.5 rounded-lg transition flex items-center justify-between group">
+                        <span class="flex items-center gap-2">🪞 <span>청동 거울과 반사대</span></span>
+                        <span class="text-red-500 opacity-0 group-hover:opacity-100 transition text-[10px]">조사 ➔</span>
+                    </button>
+                    <button onclick="inspectLocation('door')" class="hotspot-btn text-left bg-stone-900/80 hover:bg-red-950/50 border border-stone-800 hover:border-red-900 p-2.5 rounded-lg transition flex items-center justify-between group">
+                        <span class="flex items-center gap-2">🚪 <span>봉인된 연금술 철문</span></span>
+                        <span class="text-red-500 opacity-0 group-hover:opacity-100 transition text-[10px]">조사 ➔</span>
+                    </button>
+                </div>
+
+                <!-- Hint Generator Button -->
+                <div class="mt-auto pt-2 border-t border-stone-900">
+                    <button onclick="getHint()" class="w-full bg-stone-900 hover:bg-stone-800 border border-stone-700 text-stone-400 hover:text-amber-400 py-1.5 rounded-lg text-xs font-mono transition flex items-center justify-center gap-1">
+                        💡 어둠 속의 속삭임 (힌트)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Center & Right: Interactive Viewport and Puzzles -->
+            <div class="lg:col-span-2 bg-stone-950/90 border border-stone-800 rounded-xl p-4 flex flex-col justify-between shadow-2xl relative min-h-[340px]">
+                
+                <!-- Dynamic Content Display Area -->
+                <div id="viewportArea" class="flex-1 flex flex-col justify-center">
+                    <div class="text-center py-10 space-y-3">
+                        <span class="text-5xl opacity-40">🏰</span>
+                        <h3 class="cinzel text-base font-bold text-red-500">조사할 구역을 선택하십시오</h3>
+                        <p class="text-xs text-stone-500 max-w-md mx-auto leading-relaxed">
+                            어둠 속에 은밀히 숨겨진 단서들과 시약을 조합하여 봉인된 문을 해제하세요. 시간이 얼마 남지 않았습니다.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Inventory & Crafting Control Bar -->
+                <div class="border-t border-stone-800 pt-3 mt-3">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold text-stone-400 flex items-center gap-1">
+                            🎒 보유 소지품 (<span id="itemCount">0</span>/6)
+                        </span>
+                        <span class="text-[10px] text-stone-500">두 아이템을 선택하여 [조합] 시도 가능</span>
+                    </div>
+
+                    <div id="inventoryContainer" class="grid grid-cols-6 gap-2 min-h-[50px] bg-black/60 p-2 rounded-lg border border-stone-900">
+                        <div class="text-stone-600 text-[10px] col-span-6 text-center py-2 italic">소지품이 비어 있습니다.</div>
+                    </div>
+
+                    <div class="flex gap-2 mt-2">
+                        <button onclick="craftSelectedItems()" class="flex-1 bg-red-950/70 hover:bg-red-900 text-red-200 border border-red-800 py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1">
+                            ⚔️ 선택한 아이템 조합
+                        </button>
+                        <button onclick="clearSelection()" class="bg-stone-900 hover:bg-stone-800 text-stone-400 border border-stone-700 px-3 py-1.5 rounded-lg text-xs transition">
+                            선택 해제
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full max-w-5xl text-center text-[11px] text-stone-600 mt-3 z-10">
+        &copy; 2026 The Alchemist's Dark Laboratory. Built with HTML, Tailwind CSS & HTML5 Canvas.
+    </footer>
+
+    <script>
+        /* ==========================================================================
+           1. AUDIO SYNTHESIZER (Web Audio API for Horror Ambience & FX)
+           ========================================================================== */
+        let audioCtx = null;
+        let isAudioOn = false;
+        let ambientOsc = null;
+        let heartbeatInterval = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function toggleAudio() {
+            initAudio();
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            isAudioOn = !isAudioOn;
+
+            const icon = document.getElementById('audioIcon');
+            const text = document.getElementById('audioText');
+
+            if (isAudioOn) {
+                icon.innerText = "🔊";
+                text.innerText = "음향 ON";
+                startAmbientBGM();
+                startHeartbeat();
+                playSound('whisper');
+            } else {
+                icon.innerText = "🔇";
+                text.innerText = "음향 OFF";
+                stopAmbientBGM();
+                clearInterval(heartbeatInterval);
+            }
+        }
+
+        function startAmbientBGM() {
+            if (!isAudioOn || ambientOsc) return;
+            try {
+                ambientOsc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                ambientOsc.type = 'sawtooth';
+                ambientOsc.frequency.setValueAtTime(45, audioCtx.currentTime); // Low horror drone
+                
+                // Low pass filter
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(120, audioCtx.currentTime);
+
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                ambientOsc.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+                ambientOsc.start();
+            } catch(e){}
+        }
+
+        function stopAmbientBGM() {
+            if (ambientOsc) {
+                try { ambientOsc.stop(); } catch(e){}
+                ambientOsc = null;
+            }
+        }
+
+        function startHeartbeat() {
+            if (heartbeatInterval) clearInterval(heartbeatInterval);
+            heartbeatInterval = setInterval(() => {
+                if (isAudioOn) playSound('heartbeat');
+            }, 2500);
+        }
+
+        function playSound(type) {
+            if (!isAudioOn || !audioCtx) return;
+            const now = audioCtx.currentTime;
+
+            if (type === 'click') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(80, now + 0.05);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            } else if (type === 'heartbeat') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(60, now);
+                osc.frequency.exponentialRampToValueAtTime(30, now + 0.15);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.15);
+            } else if (type === 'potion') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.linearRampToValueAtTime(800, now + 0.3);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'unlock') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.setValueAtTime(400, now + 0.1);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            } else if (type === 'whisper') {
+                const bufferSize = audioCtx.sampleRate * 0.5;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(800, now);
+                const gain = audioCtx.createGain();
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.5);
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+                noise.start(now);
+            }
+        }
+
+        /* ==========================================================================
+           2. GAME STATE & INVENTORY MANAGEMENT
+           ========================================================================== */
+        const gameState = {
+            inventory: [], // items array
+            selectedIndices: [],
+            flags: {
+                skullEyePlaced: false,
+                bloodPoured: false,
+                keyPieceObtained: false,
+                parchmentRead: false,
+                potionRecipeKnown: false,
+                hallucinationActive: false,
+                doorUnlocked: false
+            },
+            timeRemaining: 900 // 15 minutes in seconds
+        };
+
+        const itemDefinitions = {
+            'blood_flask': { name: '핏빛 시약병', icon: '🧪', desc: '불길하게 굳어가는 검붉은 피가 담긴 플라스크입니다.' },
+            'brass_eye': { name: '황동 해골 눈알', icon: '👁️', desc: '차가운 금속으로 조각된 기괴한 해골용 안구입니다.' },
+            'key_piece_a': { name: '놋쇠 태엽 조각', icon: '⚙️', desc: '해골의 입에서 떨어진 톱니 모양 기계 부속입니다.' },
+            'blood_parchment': { name: '피묻은 양피지', icon: '📜', desc: '거꾸로 적힌 불길한 연금술 주문서입니다.' },
+            'salamander_tear': { name: '도롱뇽 눈물 시약', icon: '🔹', desc: '자줏빛 광채를 내며 요동치는 신비로운 시약입니다.' },
+            'black_ash': { name: '검은 재 가루', icon: '🖤', desc: '인골을 태우고 남은 수수께끼의 검은 재입니다.' },
+            'hallucination_potion': { name: '환각의 연금술 시약', icon: '🔮', desc: '음용하면 시야가 왜곡되며 숨겨진 마법진을 볼 수 있습니다.' },
+            'master_key': { name: '완성된 연금술 열쇠', icon: '🗝️', desc: '철문의 특수 자물쇠와 완벽히 맞아떨어지는 열쇠입니다.' }
+        };
+
+        function addInventory(id) {
+            if (!gameState.inventory.includes(id) && gameState.inventory.length < 6) {
+                gameState.inventory.push(id);
+                renderInventory();
+                logNarrative(`[획득] <strong>${itemDefinitions[id].name}</strong> 아이템을 습득했습니다.`);
+                playSound('unlock');
+            }
+        }
+
+        function removeInventory(id) {
+            const idx = gameState.inventory.indexOf(id);
+            if (idx !== -1) {
+                gameState.inventory.splice(idx, 1);
+                gameState.selectedIndices = [];
+                renderInventory();
+            }
+        }
+
+        function hasItem(id) {
+            return gameState.inventory.includes(id);
+        }
+
+        function toggleSelectInventory(index) {
+            playSound('click');
+            const pos = gameState.selectedIndices.indexOf(index);
+            if (pos !== -1) {
+                gameState.selectedIndices.splice(pos, 1);
+            } else {
+                if (gameState.selectedIndices.length < 2) {
+                    gameState.selectedIndices.push(index);
+                } else {
+                    gameState.selectedIndices = [index];
+                }
+            }
+            renderInventory();
+        }
+
+        function clearSelection() {
+            gameState.selectedIndices = [];
+            renderInventory();
+        }
+
+        function renderInventory() {
+            const container = document.getElementById('inventoryContainer');
+            document.getElementById('itemCount').innerText = gameState.inventory.length;
+
+            if (gameState.inventory.length === 0) {
+                container.innerHTML = `<div class="text-stone-600 text-[10px] col-span-6 text-center py-2 italic">소지품이 비어 있습니다.</div>`;
+                return;
+            }
+
+            container.innerHTML = gameState.inventory.map((itemId, idx) => {
+                const item = itemDefinitions[itemId];
+                const isSelected = gameState.selectedIndices.includes(idx);
+                return `
+                    <button onclick="toggleSelectInventory(${idx})" class="p-1.5 rounded-lg border text-center flex flex-col items-center justify-center transition relative group ${isSelected ? 'bg-red-950 border-red-500 shadow-lg ring-1 ring-red-500' : 'bg-stone-900 border-stone-800 hover:border-stone-700'}">
+                        <span class="text-lg">${item.icon}</span>
+                        <span class="text-[9px] text-stone-300 truncate w-full mt-0.5">${item.name}</span>
+                        <!-- Tooltip -->
+                        <div class="absolute bottom-full mb-1 hidden group-hover:block w-36 bg-black border border-stone-700 text-stone-300 text-[10px] p-1.5 rounded shadow-2xl z-30 pointer-events-none">
+                            <strong class="text-red-400 block">${item.name}</strong>
+                            ${item.desc}
+                        </div>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function craftSelectedItems() {
+            if (gameState.selectedIndices.length !== 2) {
+                logNarrative("조합할 아이템 두 개를 인벤토리에서 선택하십시오.");
+                return;
+            }
+
+            const id1 = gameState.inventory[gameState.selectedIndices[0]];
+            const id2 = gameState.inventory[gameState.selectedIndices[1]];
+
+            // Recipe 1: Potion Mixing (blood_flask + salamander_tear OR with black_ash)
+            if ((id1 === 'blood_flask' && id2 === 'salamander_tear') || (id1 === 'salamander_tear' && id2 === 'blood_flask')) {
+                logNarrative("두 액체를 섞자 검붉은 거품이 일었지만 불완전합니다. 무언가 촉매 가루가 더 필요한 듯합니다.");
+                playSound('potion');
+                return;
+            }
+
+            if ((id1 === 'key_piece_a' && id2 === 'brass_eye') || (id1 === 'brass_eye' && id2 === 'key_piece_a')) {
+                removeInventory('key_piece_a');
+                removeInventory('brass_eye');
+                addInventory('master_key');
+                logNarrative("⚙️ 놋쇠 태엽 조각과 황동 부품을 결합하여 <strong>'완성된 연금술 열쇠'</strong>를 조립해냈습니다!");
+                return;
+            }
+
+            logNarrative("두 아이템은 아무런 반응도 일으키지 않습니다.");
+        }
+
+        /* ==========================================================================
+           3. NARRATIVE LOGGING & HOTSPOT INVESTIGATION
+           ========================================================================== */
+        function logNarrative(msg) {
+            const log = document.getElementById('narrativeLog');
+            const p = document.createElement('p');
+            p.className = "text-stone-300 text-xs sm:text-sm border-l-2 border-red-800 pl-2 my-1";
+            p.innerHTML = msg;
+            log.appendChild(p);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function inspectLocation(type) {
+            playSound('click');
+            const view = document.getElementById('viewportArea');
+
+            if (type === 'altar') {
+                view.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-2 border-b border-red-950 pb-2">
+                            <span class="text-2xl">💀</span>
+                            <h3 class="cinzel text-sm font-bold text-red-500">핏빛 제단과 해골 장식</h3>
+                        </div>
+                        <p class="text-xs text-stone-300 leading-relaxed">
+                            어두운 제단 중앙에는 텅 빈 눈구멍을 한 해골이 놓여 있습니다.<br>
+                            오른쪽 눈구멍에는 무언가 딱 맞는 구형 물체를 끼울 수 있는 홈이 새겨져 있습니다.
+                        </p>
+                        <div class="bg-black/60 p-3 rounded-lg border border-stone-800 space-y-2">
+                            <div id="altarStatus" class="text-xs text-amber-500 font-mono">
+                                ${gameState.flags.bloodPoured ? '✅ 해골 입에서 기계 부속을 획득했습니다.' : (gameState.flags.skullEyePlaced ? '👁️ 해골의 눈알이 끼워져 있습니다. 시약을 부어야 할 것 같습니다.' : '❌ 해골의 오른쪽 안구가 비어 있습니다.')}
+                            </div>
+                            <div class="flex flex-wrap gap-2 pt-1">
+                                ${!gameState.flags.skullEyePlaced ? `
+                                    <button onclick="placeSkullEye()" class="bg-red-950 hover:bg-red-900 border border-red-800 text-xs px-3 py-1.5 rounded text-stone-200">
+                                        👁️ 황동 해골 눈알 끼우기
+                                    </button>
+                                ` : ''}
+                                ${gameState.flags.skullEyePlaced && !gameState.flags.bloodPoured ? `
+                                    <button onclick="pourBloodOnSkull()" class="bg-red-950 hover:bg-red-900 border border-red-800 text-xs px-3 py-1.5 rounded text-stone-200">
+                                        🧪 핏빛 시약 부어넣기
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (type === 'desk') {
+                view.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-2 border-b border-red-950 pb-2">
+                            <span class="text-2xl">📜</span>
+                            <h3 class="cinzel text-sm font-bold text-red-500">연금술사의 혈서 책상</h3>
+                        </div>
+                        <p class="text-xs text-stone-300 leading-relaxed">
+                            피가 말라붙은 낡은 양피지 문서가 책상에 단단히 고정되어 있습니다. 
+                            문자는 거꾸로 뒤집혀 쓰여 있습니다.
+                        </p>
+                        <div class="bg-black/80 p-3 rounded-lg border border-stone-800 text-center font-mono text-xs text-red-400 select-none">
+                            [혈서 주문]: "9 2 4 7 - A R E - U O Y"
+                            <p class="text-[10px] text-stone-500 mt-1">※ 거꾸로 읽어 단서를 파악하십시오.</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="takeParchment()" class="bg-stone-900 hover:bg-stone-800 border border-stone-700 text-xs px-3 py-1.5 rounded text-stone-300">
+                                📜 양피지 내용 인벤토리에 추가
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else if (type === 'shelf') {
+                view.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-2 border-b border-red-950 pb-2">
+                            <span class="text-2xl">🧪</span>
+                            <h3 class="cinzel text-sm font-bold text-red-500">기괴한 시약 진열대</h3>
+                        </div>
+                        <p class="text-xs text-stone-300 leading-relaxed">
+                            다양한 비급 액체들이 보관되어 있습니다.<br>
+                            올바른 조합 시약을 만들면 숨겨진 핏빛 마법진을 볼 수 있는 환각 상태에 들어갈 수 있습니다.
+                        </p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <button onclick="takeShelfItem('salamander')" class="bg-stone-900 hover:bg-stone-800 border border-stone-800 p-2 rounded text-left text-xs">
+                                🔹 [도롱뇽 눈물 시약] 획득
+                            </button>
+                            <button onclick="takeShelfItem('ash')" class="bg-stone-900 hover:bg-stone-800 border border-stone-800 p-2 rounded text-left text-xs">
+                                🖤 [검은 재 가루] 획득
+                            </button>
+                            <button onclick="takeShelfItem('blood')" class="bg-stone-900 hover:bg-stone-800 border border-stone-800 p-2 rounded text-left text-xs">
+                                🧪 [핏빛 시약병] 획득
+                            </button>
+                            <button onclick="takeShelfItem('eye')" class="bg-stone-900 hover:bg-stone-800 border border-stone-800 p-2 rounded text-left text-xs">
+                                👁️ [황동 해골 눈알] 획득
+                            </button>
+                        </div>
+                        <div class="border-t border-stone-900 pt-2">
+                            <button onclick="brewHallucinationPotion()" class="w-full bg-purple-950 hover:bg-purple-900 border border-purple-800 text-purple-200 text-xs py-2 rounded font-bold transition">
+                                🔮 환각의 연금술 시약 제조 (핏빛 시약 + 도롱뇽 눈물 + 검은 재)
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else if (type === 'mirror') {
+                view.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-2 border-b border-red-950 pb-2">
+                            <span class="text-2xl">🪞</span>
+                            <h3 class="cinzel text-sm font-bold text-red-500">청동 거울과 벽면</h3>
+                        </div>
+                        <p class="text-xs text-stone-300 leading-relaxed">
+                            어두운 벽면을 반사하는 청동 거울입니다.<br>
+                            ${gameState.flags.hallucinationActive 
+                                ? '<span class="text-purple-400 font-bold glow-purple">🔮 환각 시약의 영향으로 벽면에 숨겨져 있던 핏빛 마법진 숫자가 선명하게 떠오릅니다: [ 7 4 2 9 ]</span>' 
+                                : '평범한 상태에서는 아무런 표식도 보이지 않습니다. 특수 시약을 마셔 시야를 개안해야 합니다.'}
+                        </p>
+                        <div class="bg-black/80 p-3 rounded-lg border border-stone-800 text-center">
+                            <span class="text-xs font-mono text-stone-500">
+                                ${gameState.flags.hallucinationActive ? '암호 도출: 7 4 2 9' : '??? ??? ??? ???'}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            } else if (type === 'door') {
+                view.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-2 border-b border-red-950 pb-2">
+                            <span class="text-2xl">🚪</span>
+                            <h3 class="cinzel text-sm font-bold text-red-500">봉인된 연금술 철문</h3>
+                        </div>
+                        <p class="text-xs text-stone-300 leading-relaxed">
+                            육중한 쇠로 만들어진 탈출구입니다. 회전식 비밀번호 다이얼과 특수 열쇠 구멍이 결합되어 있습니다.
+                        </p>
+                        <div class="bg-black/80 p-3 rounded-lg border border-stone-800 space-y-3">
+                            <div>
+                                <label class="block text-[11px] text-stone-400 mb-1">비밀번호 4자리 입력:</label>
+                                <input type="text" id="doorPassInput" maxlength="4" placeholder="7429" class="w-full bg-stone-900 border border-stone-700 rounded px-3 py-1.5 text-center font-mono text-sm text-red-400 focus:outline-none focus:border-red-600">
+                            </div>
+                            <button onclick="attemptDoorUnlock()" class="w-full bg-red-950 hover:bg-red-900 border border-red-700 text-red-200 text-xs py-2 rounded font-bold transition">
+                                🔓 비밀번호 입력 및 완성된 열쇠 삽입
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function placeSkullEye() {
+            if (!hasItem('brass_eye')) {
+                logNarrative("해골 안구 홈에 맞는 '황동 해골 눈알'이 필요합니다.");
+                return;
+            }
+            removeInventory('brass_eye');
+            gameState.flags.skullEyePlaced = true;
+            logNarrative("해골의 오른쪽 눈에 황동 눈알을 끼워 넣었습니다. '딱'하는 기계음이 들립니다.");
+            inspectLocation('altar');
+        }
+
+        function pourBloodOnSkull() {
+            if (!hasItem('blood_flask')) {
+                logNarrative("부어 넣을 '핏빛 시약병'이 없습니다.");
+                return;
+            }
+            gameState.flags.bloodPoured = true;
+            addInventory('key_piece_a');
+            logNarrative("해골 머리에 피를 붓자, 기괴한 장치가 작동하며 해골의 입이 열렸습니다! 입 안에서 <strong>'놋쇠 태엽 조각'</strong>을 발견했습니다.");
+            inspectLocation('altar');
+        }
+
+        function takeParchment() {
+            addInventory('blood_parchment');
+            logNarrative("피묻은 양피지를 떼어내어 소지품에 담았습니다.");
+        }
+
+        function takeShelfItem(item) {
+            if (item === 'salamander') addInventory('salamander_tear');
+            if (item === 'ash') addInventory('black_ash');
+            if (item === 'blood') addInventory('blood_flask');
+            if (item === 'eye') addInventory('brass_eye');
+        }
+
+        function brewHallucinationPotion() {
+            if (hasItem('blood_flask') && hasItem('salamander_tear') && hasItem('black_ash')) {
+                removeInventory('blood_flask');
+                removeInventory('salamander_tear');
+                removeInventory('black_ash');
+                addInventory('hallucination_potion');
+                logNarrative("🧪 세 가지 비급 요소를 조합하여 보랏빛 연기가 피어오르는 <strong>'환각의 연금술 시약'</strong>을 만들었습니다!");
+                drinkHallucinationPotion();
+            } else {
+                logNarrative("시약 제조를 위해 핏빛 시약, 도롱뇽 눈물, 검은 재 가루가 모두 필요합니다.");
+            }
+        }
+
+        function drinkHallucinationPotion() {
+            if (hasItem('hallucination_potion')) {
+                removeInventory('hallucination_potion');
+                gameState.flags.hallucinationActive = true;
+                document.body.classList.add('hallucination-mode');
+                document.getElementById('hallucinationIndicator').classList.remove('hidden');
+                logNarrative("🔮 환각 시약을 마셨습니다! 시야가 기괴하게 왜곡되며 청동 거울 너머 벽면에 숨겨진 마법진 문자 [ 7 4 2 9 ]가 드러납니다!");
+                playSound('potion');
+                inspectLocation('mirror');
+            }
+        }
+
+        function attemptDoorUnlock() {
+            const input = document.getElementById('doorPassInput').value.trim();
+            if (input !== '7429') {
+                logNarrative("❌ 자물쇠 다이얼이 맞지 않습니다. (거울 속 마법진 암호를 확인하세요)");
+                playSound('click');
+                return;
+            }
+
+            if (!hasItem('master_key')) {
+                logNarrative("❌ 비밀번호는 맞았으나, 자물쇠를 돌릴 '완성된 연금술 열쇠'가 삽입되지 않았습니다.");
+                return;
+            }
+
+            // SUCCESS -> TRIGGER GRAND TWIST ENDING
+            triggerTwistEnding();
+        }
+
+        /* ==========================================================================
+           4. GRAND TWIST ENDING (HORROR HOMUNCULUS REVEAL)
+           ========================================================================== */
+        function triggerTwistEnding() {
+            playSound('unlock');
+            stopAmbientBGM();
+
+            const container = document.getElementById('gameContainer');
+            container.innerHTML = `
+                <div class="bg-stone-950 border-2 border-red-700 rounded-2xl p-6 sm:p-10 text-center space-y-6 shadow-2xl relative overflow-hidden animate-pulse">
+                    
+                    <div class="text-6xl animate-bounce">🫀</div>
+
+                    <h2 class="cinzel text-2xl sm:text-4xl font-black text-red-600 tracking-widest glow-red">
+                        진실의 개안: 잔혹한 반전
+                    </h2>
+
+                    <div class="space-y-4 text-xs sm:text-sm text-stone-300 leading-relaxed max-w-2xl mx-auto font-serif">
+                        <p class="text-red-400 font-bold text-base">
+                            철컥! 묵직한 철문이 열리고 당신은 바깥 세상을 향해 뛰어들었습니다.
+                        </p>
+                        <p>
+                            그러나 눈앞에 펼쳐진 것은 탈출구가 아니었습니다.<br>
+                            하늘 대신 소름 끼치는 자줏빛 액체의 파도와 보글거리는 거대 거품이 사방을 뒤덮고 있었습니다.
+                        </p>
+                        <p class="bg-black/80 p-4 rounded-xl border border-red-900 text-red-300 italic">
+                            "드디어 첫 번째 호문쿨루스(Homunculus) 개체가 자아를 갖고 연금술 솥의 봉인을 풀었군..."
+                        </p>
+                        <p>
+                            위쪽 까마득한 천장에서 거대한 연금술사의 그늘진 얼굴이 당신을 내려다보며 기괴하게 웃고 있었습니다.<br>
+                            <strong>당신은 인간이 아니었습니다.</strong> 당신이 탈출한 연구실은 사실 연금술사 '반스'의 거대한 <strong>[연금술 솥(Cauldron)]</strong> 내부였으며, 당신 자신은 시체 조각과 혈액으로 연성된 인조 인간에 불과했던 것입니다!
+                        </p>
+                    </div>
+
+                    <div class="pt-4 border-t border-stone-800 flex justify-center gap-4">
+                        <button onclick="location.reload()" class="bg-red-900 hover:bg-red-800 text-stone-100 font-bold px-6 py-3 rounded-xl text-xs sm:text-sm transition shadow-lg border border-red-600">
+                            🔄 처음부터 다시 도전하기
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        /* ==========================================================================
+           5. TIMER & BACKGROUND CANVAS EFFECTS
+           ========================================================================== */
+        function getHint() {
+            playSound('whisper');
+            if (!gameState.flags.skullEyePlaced) {
+                logNarrative("💡 [속삭임]: 시약 진열대에서 황동 눈알과 핏빛 시약을 찾아 제단 해골에 부으세요.");
+            } else if (!hasItem('master_key')) {
+                logNarrative("💡 [속삭임]: 놋쇠 태엽 조각과 황동 눈알을 인벤토리에서 [조합]하여 열쇠를 완성하세요.");
+            } else if (!gameState.flags.hallucinationActive) {
+                logNarrative("💡 [속삭임]: 핏빛 시약, 도롱뇽 눈물, 검은 재를 진열대에서 모아 환각 시약을 제조하세요.");
+            } else {
+                logNarrative("💡 [속삭임]: 거울 속 비밀번호 '7429'와 완성된 열쇠로 철문을 열고 진실을 마주하세요.");
+            }
+        }
+
+        // Countdown Timer
+        setInterval(() => {
+            if (gameState.timeRemaining > 0) {
+                gameState.timeRemaining--;
+                const m = Math.floor(gameState.timeRemaining / 60).toString().padStart(2, '0');
+                const s = (gameState.timeRemaining % 60).toString().padStart(2, '0');
+                document.getElementById('timerDisplay').innerText = `${m}:${s}`;
+            }
+        }, 1000);
+
+        // Canvas Particle Background
+        window.onload = function() {
+            const canvas = document.getElementById('bgCanvas');
+            const ctx = canvas.getContext('2d');
+            let width = canvas.width = window.innerWidth;
+            let height = canvas.height = window.innerHeight;
+
+            window.addEventListener('resize', () => {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            });
+
+            const particles = Array.from({ length: 45 }, () => ({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                radius: Math.random() * 2 + 1,
+                alpha: Math.random() * 0.5 + 0.1,
+                speedY: -Math.random() * 0.4 - 0.1
+            }));
+
+            function animate() {
+                ctx.clearRect(0, 0, width, height);
+                particles.forEach(p => {
+                    p.y += p.speedY;
+                    if (p.y < 0) p.y = height;
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(180, 40, 40, ${p.alpha})`;
+                    ctx.fill();
+                });
+                requestAnimationFrame(animate);
+            }
+            animate();
+        };
+
+        // File Save Functionality
+        function downloadGameFile() {
+            const code = document.documentElement.outerHTML;
+            const blob = new Blob([code], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'alchemist_dark_laboratory.hdm';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            alert("전체 방탈출 게임 파일이 .hdm(.html) 확장자로 다운로드되었습니다.");
+        }
+    </script>
+</body>
+</html>
