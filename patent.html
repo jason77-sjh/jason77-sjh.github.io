@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patents | Jung Hoon Sung</title>
+    <link rel="icon" href="image/favicon.ico" type="image/x-icon">
+    <style>
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 28px 20px 40px;
+            background-color: #fcfcfc;
+        }
+
+        h1, h2, h3 { color: #1a1a1a; }
+
+        .top-nav {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+        }
+
+        .top-nav a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 38px;
+            padding: 0 14px;
+            border: 1px solid #d7e3f3;
+            border-radius: 6px;
+            color: #0056b3;
+            background-color: #fff;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.95rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+            transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+        }
+
+        .top-nav a:hover,
+        .top-nav a.active {
+            background-color: #0056b3;
+            color: #fff;
+        }
+
+        .top-nav a:hover { transform: translateY(-2px); }
+
+        .page-header {
+            border-bottom: 2px solid #eaeaea;
+            padding-bottom: 24px;
+            margin-bottom: 40px;
+        }
+
+        .page-header h1 {
+            margin: 0 0 8px 0;
+            font-size: 2.5rem;
+        }
+
+        .page-header p {
+            margin: 0;
+            color: #555;
+            font-size: 1.05rem;
+        }
+
+        section { margin-bottom: 50px; }
+
+        section h2 {
+            font-size: 1.8rem;
+            border-left: 5px solid #0056b3;
+            padding-left: 15px;
+            margin-bottom: 20px;
+        }
+
+        .patent-card {
+            background-color: #fff;
+            border: 1px solid #eaeaea;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .patent-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .patent-head {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .patent-card h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            flex: 1;
+        }
+
+        .status {
+            flex-shrink: 0;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .status.registered { background-color: #e6f4ea; color: #1e7e34; }
+        .status.filed      { background-color: #eef4fb; color: #0056b3; }
+
+        .patent-meta {
+            display: grid;
+            grid-template-columns: 110px 1fr;
+            gap: 2px 12px;
+            margin: 0;
+            font-size: 0.93rem;
+        }
+
+        .patent-meta dt { color: #888; font-weight: 600; }
+        .patent-meta dd { margin: 0; color: #444; }
+
+        .placeholder {
+            border-style: dashed;
+            background-color: #fafafa;
+        }
+
+        .placeholder h3 { color: #888; }
+
+        @media (max-width: 600px) {
+            .top-nav { justify-content: center; }
+            .top-nav a { flex: 1 1 42%; }
+            .page-header { text-align: center; }
+            .patent-head { flex-direction: column-reverse; gap: 6px; }
+            .patent-meta { grid-template-columns: 90px 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav" aria-label="Main navigation">
+        <a href="index.html">Home</a>
+        <a href="publication.html">Publication</a>
+        <a href="cv.html">CV</a>
+        <a href="patent.html" class="active" aria-current="page">Patent</a>
+    </nav>
+
+    <header class="page-header">
+        <h1>Patents</h1>
+        <p>등록 및 출원된 특허 목록입니다.</p>
+    </header>
+
+    <!--
+        ▼ 특허 추가 방법 ▼
+        아래 <div class="patent-card"> ... </div> 블록을 복사해서 붙여넣고 내용을 바꾸세요.
+        - 상태 표시: 등록은 <span class="status registered">등록</span>, 출원은 <span class="status filed">출원</span>
+        - 내용을 채운 뒤에는 class="patent-card placeholder" 에서 " placeholder" 를 지우세요.
+    -->
+
+    <section id="registered">
+        <h2>Registered Patents</h2>
+        <div class="patent-card placeholder">
+            <div class="patent-head">
+                <h3>특허 명칭을 입력하세요</h3>
+                <span class="status registered">등록</span>
+            </div>
+            <dl class="patent-meta">
+                <dt>발명자</dt><dd>성정훈, 공동발명자</dd>
+                <dt>등록번호</dt><dd>10-XXXXXXX</dd>
+                <dt>등록일</dt><dd>20XX.XX.XX</dd>
+                <dt>국가</dt><dd>대한민국</dd>
+            </dl>
+        </div>
+    </section>
+
+    <section id="filed">
+        <h2>Patent Applications</h2>
+        <div class="patent-card placeholder">
+            <div class="patent-head">
+                <h3>특허 명칭을 입력하세요</h3>
+                <span class="status filed">출원</span>
+            </div>
+            <dl class="patent-meta">
+                <dt>발명자</dt><dd>성정훈, 공동발명자</dd>
+                <dt>출원번호</dt><dd>10-20XX-XXXXXXX</dd>
+                <dt>출원일</dt><dd>20XX.XX.XX</dd>
+                <dt>국가</dt><dd>대한민국</dd>
+            </dl>
+        </div>
+    </section>
+
+</body>
+</html>

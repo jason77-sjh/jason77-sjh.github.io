@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Publications | Jung Hoon Sung</title>
+    <link rel="icon" href="image/favicon.ico" type="image/x-icon">
+    <style>
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 28px 20px 40px;
+            background-color: #fcfcfc;
+        }
+
+        h1, h2, h3 { color: #1a1a1a; }
+
+        .top-nav {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+        }
+
+        .top-nav a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 38px;
+            padding: 0 14px;
+            border: 1px solid #d7e3f3;
+            border-radius: 6px;
+            color: #0056b3;
+            background-color: #fff;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.95rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+            transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+        }
+
+        .top-nav a:hover,
+        .top-nav a.active {
+            background-color: #0056b3;
+            color: #fff;
+        }
+
+        .top-nav a:hover { transform: translateY(-2px); }
+
+        .page-header {
+            border-bottom: 2px solid #eaeaea;
+            padding-bottom: 24px;
+            margin-bottom: 40px;
+        }
+
+        .page-header h1 {
+            margin: 0 0 8px 0;
+            font-size: 2.5rem;
+        }
+
+        .page-header p {
+            margin: 0;
+            color: #555;
+            font-size: 1.05rem;
+        }
+
+        .page-header a { color: #0056b3; text-decoration: none; }
+        .page-header a:hover { text-decoration: underline; }
+
+        section { margin-bottom: 50px; }
+
+        section h2 {
+            font-size: 1.8rem;
+            border-left: 5px solid #0056b3;
+            padding-left: 15px;
+            margin-bottom: 20px;
+        }
+
+        .pub-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            counter-reset: pub;
+        }
+
+        .pub-item {
+            counter-increment: pub;
+            position: relative;
+            background-color: #fff;
+            border: 1px solid #eaeaea;
+            border-radius: 8px;
+            padding: 18px 20px 18px 56px;
+            margin-bottom: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .pub-item::before {
+            content: "[" counter(pub) "]";
+            position: absolute;
+            left: 18px;
+            top: 18px;
+            color: #0056b3;
+            font-weight: 700;
+        }
+
+        .pub-title {
+            font-weight: 700;
+            color: #1a1a1a;
+            font-size: 1.05rem;
+            margin: 0 0 4px 0;
+        }
+
+        .pub-authors {
+            margin: 0 0 4px 0;
+            color: #555;
+            font-size: 0.95rem;
+        }
+
+        .pub-authors .me {
+            font-weight: 700;
+            text-decoration: underline;
+            color: #1a1a1a;
+        }
+
+        .pub-venue {
+            margin: 0;
+            color: #666;
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .pub-links {
+            margin-top: 10px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .badge,
+        .pub-links a {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .pub-links a {
+            border: 1px solid #d7e3f3;
+            color: #0056b3;
+            background-color: #f5f9ff;
+        }
+
+        .pub-links a:hover {
+            background-color: #0056b3;
+            color: #fff;
+        }
+
+        .badge {
+            background-color: #eef4fb;
+            color: #0056b3;
+            margin-right: 6px;
+            font-style: normal;
+        }
+
+        .placeholder {
+            border-style: dashed;
+            background-color: #fafafa;
+            color: #999;
+        }
+
+        .placeholder .pub-title { color: #888; }
+
+        @media (max-width: 600px) {
+            .top-nav { justify-content: center; }
+            .top-nav a { flex: 1 1 42%; }
+            .page-header { text-align: center; }
+            .pub-item { padding-left: 48px; }
+            .pub-item::before { left: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav" aria-label="Main navigation">
+        <a href="index.html">Home</a>
+        <a href="publication.html" class="active" aria-current="page">Publication</a>
+        <a href="cv.html">CV</a>
+        <a href="patent.html">Patent</a>
+    </nav>
+
+    <header class="page-header">
+        <h1>Publications</h1>
+        <p>수어 번역(SLT), 모션 생성, Hand-Object Interaction 관련 연구 실적입니다.</p>
+    </header>
+
+    <!--
+        ▼ 논문 추가 방법 ▼
+        아래 <li class="pub-item"> ... </li> 블록을 복사해서 붙여넣고 내용을 바꾸세요.
+        - 본인 이름은 <span class="me">Jung Hoon Sung</span> 으로 감싸면 굵게 표시됩니다.
+        - 링크가 없으면 해당 <a> 태그를 지우면 됩니다.
+        - 내용을 채운 뒤에는 class="pub-item placeholder" 에서 " placeholder" 를 지우세요.
+    -->
+
+    <section id="international-journal">
+        <h2>International Journals</h2>
+        <ol class="pub-list">
+            <li class="pub-item placeholder">
+                <p class="pub-title">논문 제목을 입력하세요</p>
+                <p class="pub-authors"><span class="me">Jung Hoon Sung</span>, Co-author A, Co-author B</p>
+                <p class="pub-venue"><span class="badge">Journal</span>Journal Name, Vol. X, No. X, pp. XX–XX, 2025</p>
+                <div class="pub-links">
+                    <a href="#">PDF</a>
+                    <a href="#">DOI</a>
+                    <a href="#">Code</a>
+                </div>
+            </li>
+        </ol>
+    </section>
+
+    <section id="international-conference">
+        <h2>International Conferences</h2>
+        <ol class="pub-list">
+            <li class="pub-item placeholder">
+                <p class="pub-title">Context-aware Gloss-wise Autoregressive Diffusion for Continuous Sign Language Motion Generation (제목 확인 필요)</p>
+                <p class="pub-authors"><span class="me">Jung Hoon Sung</span>, Co-author A</p>
+                <p class="pub-venue"><span class="badge">Conference</span>학회명 (예: CVPR / ICCV / AAAI), 2025</p>
+                <div class="pub-links">
+                    <a href="#">PDF</a>
+                    <a href="#">Project</a>
+                </div>
+            </li>
+            <li class="pub-item placeholder">
+                <p class="pub-title">WristHOI: A Dual Wrist-mounted Contact-aware Hand-Object Interaction Dataset (제목 확인 필요)</p>
+                <p class="pub-authors"><span class="me">Jung Hoon Sung</span>, Co-author A</p>
+                <p class="pub-venue"><span class="badge">Conference</span>학회명, 2025</p>
+                <div class="pub-links">
+                    <a href="#">PDF</a>
+                    <a href="#">Dataset</a>
+                </div>
+            </li>
+        </ol>
+    </section>
+
+    <section id="domestic">
+        <h2>Domestic Journals &amp; Conferences</h2>
+        <ol class="pub-list">
+            <li class="pub-item placeholder">
+                <p class="pub-title">국내 논문 제목을 입력하세요</p>
+                <p class="pub-authors"><span class="me">성정훈</span>, 공동저자</p>
+                <p class="pub-venue"><span class="badge">KCI</span>학회/학술지명, 2024</p>
+            </li>
+        </ol>
+    </section>
+
+</body>
+</html>

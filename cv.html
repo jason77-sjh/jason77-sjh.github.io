@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CV | Jung Hoon Sung</title>
+    <link rel="icon" href="image/favicon.ico" type="image/x-icon">
+    <style>
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 28px 20px 40px;
+            background-color: #fcfcfc;
+        }
+
+        h1, h2, h3 { color: #1a1a1a; }
+
+        .top-nav {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+        }
+
+        .top-nav a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 38px;
+            padding: 0 14px;
+            border: 1px solid #d7e3f3;
+            border-radius: 6px;
+            color: #0056b3;
+            background-color: #fff;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.95rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+            transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+        }
+
+        .top-nav a:hover,
+        .top-nav a.active {
+            background-color: #0056b3;
+            color: #fff;
+        }
+
+        .top-nav a:hover { transform: translateY(-2px); }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 20px;
+            border-bottom: 2px solid #eaeaea;
+            padding-bottom: 24px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .page-header h1 {
+            margin: 0 0 8px 0;
+            font-size: 2.5rem;
+        }
+
+        .page-header p {
+            margin: 2px 0;
+            color: #555;
+            font-size: 1.05rem;
+        }
+
+        .page-header a { color: #0056b3; text-decoration: none; }
+        .page-header a:hover { text-decoration: underline; }
+
+        .print-btn {
+            padding: 10px 20px;
+            background-color: #0056b3;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .print-btn:hover { background-color: #003f82; }
+
+        section { margin-bottom: 44px; }
+
+        section h2 {
+            font-size: 1.6rem;
+            border-left: 5px solid #0056b3;
+            padding-left: 15px;
+            margin-bottom: 18px;
+        }
+
+        .cv-row {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 16px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .cv-row:last-child { border-bottom: none; }
+
+        .cv-date {
+            color: #0056b3;
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .cv-content h3 {
+            margin: 0;
+            font-size: 1.08rem;
+        }
+
+        .cv-content p {
+            margin: 2px 0 0 0;
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+        }
+
+        .tag-list li {
+            padding: 4px 12px;
+            background-color: #fff;
+            border: 1px solid #d7e3f3;
+            border-radius: 999px;
+            color: #0056b3;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .skill-group { margin-bottom: 14px; }
+
+        .skill-group h3 {
+            margin: 0 0 8px 0;
+            font-size: 1rem;
+            color: #555;
+        }
+
+        .todo { color: #aaa; }
+
+        @media (max-width: 600px) {
+            .top-nav { justify-content: center; }
+            .top-nav a { flex: 1 1 42%; }
+            .page-header { flex-direction: column; align-items: flex-start; }
+            .cv-row { grid-template-columns: 1fr; gap: 2px; }
+        }
+
+        @media print {
+            body { background: #fff; padding: 0; max-width: none; }
+            .top-nav, .print-btn { display: none; }
+            section { break-inside: avoid; margin-bottom: 28px; }
+            .tag-list li { border-color: #999; color: #333; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav" aria-label="Main navigation">
+        <a href="index.html">Home</a>
+        <a href="publication.html">Publication</a>
+        <a href="cv.html" class="active" aria-current="page">CV</a>
+        <a href="patent.html">Patent</a>
+    </nav>
+
+    <header class="page-header">
+        <div>
+            <h1>Jung Hoon Sung (성정훈)</h1>
+            <p>Ph.D. Student, Dept. of Computer Engineering, Dankook University</p>
+            <p><a href="mailto:jason_dku77@dankook.ac.kr">jason_dku77@dankook.ac.kr</a></p>
+        </div>
+        <button class="print-btn" type="button" onclick="window.print()">PDF로 저장 / 인쇄</button>
+    </header>
+
+    <section id="interests">
+        <h2>Research Interests</h2>
+        <ul class="tag-list">
+            <li>Sign Language Translation (SLT)</li>
+            <li>Motion Generation</li>
+            <li>Diffusion Models</li>
+            <li>Hand-Object Interaction</li>
+            <li>Human-Computer Interaction</li>
+        </ul>
+    </section>
+
+    <section id="education">
+        <h2>Education</h2>
+        <div class="cv-row">
+            <div class="cv-date">20XX – Present</div>
+            <div class="cv-content">
+                <h3>Ph.D. in Computer Engineering</h3>
+                <p>단국대학교 (Dankook University), 대한민국</p>
+            </div>
+        </div>
+        <div class="cv-row">
+            <div class="cv-date">20XX (6 months)</div>
+            <div class="cv-content">
+                <h3>Visiting Researcher</h3>
+                <p>University of Birmingham, United Kingdom</p>
+            </div>
+        </div>
+        <div class="cv-row">
+            <div class="cv-date">20XX</div>
+            <div class="cv-content">
+                <h3>Exchange Student</h3>
+                <p>Eötvös Loránd University (ELTE), Hungary</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="research">
+        <h2>Research Experience</h2>
+        <div class="cv-row">
+            <div class="cv-date">20XX – Present</div>
+            <div class="cv-content">
+                <h3>Context-aware Gloss-wise Autoregressive Diffusion</h3>
+                <p>연속적인 수어 모션 생성을 위한 확산 모델 기반 방법론 연구 및 개발</p>
+            </div>
+        </div>
+        <div class="cv-row">
+            <div class="cv-date">20XX – Present</div>
+            <div class="cv-content">
+                <h3>WristHOI Dataset</h3>
+                <p>Dual Wrist-mounted 형태의 접촉 인지 Hand-Object Interaction 데이터셋 구축 및 분석</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="publications">
+        <h2>Publications &amp; Patents</h2>
+        <p>논문 목록은 <a href="publication.html">Publications</a>, 특허 목록은 <a href="patent.html">Patents</a> 페이지에서 확인할 수 있습니다.</p>
+    </section>
+
+    <section id="awards">
+        <h2>Awards &amp; Honors</h2>
+        <div class="cv-row">
+            <div class="cv-date">20XX</div>
+            <div class="cv-content">
+                <h3>IITP 원장상</h3>
+                <p>정보통신기획평가원 (IITP)</p>
+            </div>
+        </div>
+        <div class="cv-row">
+            <div class="cv-date">20XX</div>
+            <div class="cv-content">
+                <h3>임베디드소프트웨어 경진대회 대상</h3>
+                <p>웨어러블디바이스 부문</p>
+            </div>
+        </div>
+        <div class="cv-row">
+            <div class="cv-date">20XX</div>
+            <div class="cv-content">
+                <h3>종합설계 대상</h3>
+                <p>단국대학교</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="skills">
+        <h2>Skills</h2>
+        <div class="skill-group">
+            <h3>Programming</h3>
+            <ul class="tag-list">
+                <li>Python</li>
+                <li>C / C++</li>
+                <li>HTML / JavaScript</li>
+            </ul>
+        </div>
+        <div class="skill-group">
+            <h3>Frameworks &amp; Tools</h3>
+            <ul class="tag-list">
+                <li>PyTorch</li>
+                <li>Blender</li>
+                <li>Git</li>
+            </ul>
+        </div>
+        <div class="skill-group">
+            <h3>Languages</h3>
+            <ul class="tag-list">
+                <li>Korean (Native)</li>
+                <li>English</li>
+            </ul>
+        </div>
+    </section>
+
+</body>
+</html>
